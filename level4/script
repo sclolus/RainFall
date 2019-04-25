@@ -1,0 +1,5 @@
+layout asm
+break *0x8048455
+run < ./test
+x/20x 0x08049810
+
