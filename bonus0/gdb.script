@@ -1,0 +1,6 @@
+layout asm
+break *0x08048517
+set disassembly-flavor intel
+refresh
+run < ./test
+x/40x $esp

