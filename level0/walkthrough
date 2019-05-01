@@ -1,0 +1,20 @@
+0x08048ec0      55             push ebp                                                                           
+0x08048ec1      89e5           mov ebp, esp                                                                       
+0x08048ec3      83e4f0         and esp, 0xfffffff0                                                                
+0x08048ec6      83ec20         sub esp, 0x20                                                                      
+0x08048ec9      8b450c         mov eax, dword [str]
+0x08048ecc      83c004         add eax, 4                                                                         
+0x08048ecf      8b00           mov eax, dword [eax]                                                               
+0x08048ed1      890424         mov dword [esp], eax
+0x08048ed4      e837080000     call sym.atoi
+0x08048ed9      3da7010000     cmp eax, 0x1a7              ; this value is 423
+0x08048ede      7578           jne 0x8048f58                                                                      
+0x08048ee0      c7042448530c.  mov dword [esp], str.bin_sh    ; [0x80c5348:4]=0x6e69622f ; "/bin/sh"              
+0x08048ee7      e8047d0000     call sym.__strdup
+0x08048eec      89442410       mov dword [var_10h], eax                                                           
+0x08048ef0      c74424140000.  mov dword [var_14h], 0
+
+We can see that the program simply checks against the first parameter converted to an int with atoi.
+The program checks this value against 423 (0x1a7).
+./level0 423
+enjoy !

@@ -1,0 +1,62 @@
+/ main 199
+|   int main (int argc, char **argv, char **envp);
+|           ; arg char **str @ ebp+0xc
+|           ; var uid_t var_4h @ esp+0x4
+|           ; var uid_t var_8h @ esp+0x8
+|           ; var int32_t var_ch @ esp+0xc
+|           ; var int32_t var_10h @ esp+0x10
+|           ; var int32_t var_14h @ esp+0x14
+|           ; var uid_t var_18h @ esp+0x18
+|           ; var int32_t var_1ch @ esp+0x1c
+|           0x08048ec0      push ebp                                   
+|           0x08048ec1      ebp = esp                                  
+|           0x08048ec3      esp &= 0xfffffff0                          
+|           0x08048ec6      esp -= 0x20                                
+|           0x08048ec9      eax = dword [str]                          
+|           0x08048ecc      eax += 4                                   
+|           0x08048ecf      eax = dword [eax]                         
+|           0x08048ed1      dword [esp] = eax                          ; const char *str
+|           0x08048ed4      sym.atoi ()                                ; int atoi(const char *str)
+|           0x08048ed9      var = eax - 0x1a7                          ; 423 
+|       ,=< 0x08048ede      if (var) goto 0x8048f58                    
+|       |   0x08048ee0      dword [esp] = str.bin_sh                   0x6e69622f ; "/bin/sh"
+|       |   0x08048ee7      sym.__strdup ()                            
+|       |   0x08048eec      dword [var_10h] = eax
+|       |   0x08048ef0      dword [var_14h] = 0
+|       |   0x08048ef8      sym.getegid ()                             
+|       |   0x08048efd      dword [var_1ch] = eax
+|       |   0x08048f01      sym.geteuid ()                             
+|       |                                                             
+|       |   0x08048f06      dword [var_18h] = eax
+|       |   0x08048f0a      eax = dword [var_1ch]                      
+|       |   0x08048f0e      dword [var_8h] = eax
+|       |   0x08048f12      eax = dword [var_1ch]                      
+|       |   0x08048f16      dword [var_4h] = eax
+|       |   0x08048f1a      eax = dword [var_1ch]                      
+|       |   0x08048f1e      dword [esp] = eax
+|       |   0x08048f21      sym.__setresgid ()                         
+|       |   0x08048f26      eax = dword [var_18h]                      
+|       |   0x08048f2a      dword [var_8h] = eax
+|       |   0x08048f2e      eax = dword [var_18h]                      
+|       |   0x08048f32      dword [var_4h] = eax
+|       |   0x08048f36      eax = dword [var_18h]                      
+|       |   0x08048f3a      dword [esp] = eax
+|       |   0x08048f3d      sym.setresuid ()                           
+|       |   0x08048f42      eax = [var_10h]
+|       |   0x08048f46      dword [var_4h] = eax
+|       |   0x08048f4a      dword [esp] = str.bin_sh                   ; [0x80c5348:4]=0x6e69622f ; "/bin/sh"
+|       |   0x08048f51      sym.execv ()                               
+|      ,==< 0x08048f56      goto 0x8048f80                             
+|      ||   ; CODE XREF from main (0x8048ede)
+|      |`-> 0x08048f58      eax = dword obj.stderr                     
+|      |    0x08048f5d      edx = eax                                  
+|      |    0x08048f5f      eax = str.No                               ; 0x80c5350 ; "No !\n"
+|      |    0x08048f64      dword [var_ch] = edx
+|      |    0x08048f68      dword [var_8h] = 5
+|      |    0x08048f70      dword [var_4h] = 1
+|      |    0x08048f78      dword [esp] = eax
+|      |    0x08048f7b      sym._IO_fwrite ()                          
+|      |    ; CODE XREF from main (0x8048f56)
+|      `--> 0x08048f80      eax = 0                                    
+|           0x08048f85                                                 
+\           0x08048f86      return 0                                   
