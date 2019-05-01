@@ -1,0 +1,34 @@
+The disassembly gives:
+|           0x080484e7      eax = [src]
+|           0x080484ea      dword [esp] = eax                          ; char *s
+|           0x080484ed      sym.imp.gets ()                            ; char *gets(char *s)
+
+`gets` being called, we can overwrite all the stack as we please.
+However this:
+|           0x080484f2      eax = dword [arg_4h]
+|           0x080484f5      dword [var_ch] = eax
+|           0x080484f8      eax = dword [var_ch]
+|           0x080484fb      eax &= 0xb0000000
+|           0x08048500      var = eax - 0xb0000000
+|       ,=< 0x08048505      if (var) goto 0x8048527
+
+tells us that the return address of the fonction p is checked against.
+As the calling convention used here is defined, the return address of the fonction is located at ebp+0x4
+Its value is &'ed with 0xb0000000 to check the a potential address written over the stack isn't a stack/environment address.
+One way to counter this is to set the return_eip to the address of the instruction ret: 0x0804853e.
+This way the ret is executed two times, we need to make sure that the next address of return is set to the address our shellcode, which we will just store in the environment.
+The next return address is in ebp+0x8.
+
+Since the buffer used by gets is located at ebp-0x4c, we have got 76 bytes to fill until we hit the saved ebp.
+After those bytes, we have got 4 bytes of the stored ebp to fill, then the return eip, then the second return eip.
+
+So after creating a script to make our input file, and exported a NOP-slided shellcode in the environment:
+cat file - | ./level2
+
+we've got a SUID shell.
+
+
+
+
+
+
