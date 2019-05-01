@@ -32,7 +32,7 @@
 |           0x08048495      dword [esp] = 4                            ; size_t size
 |           0x0804849c      sym.imp.malloc ()                          ; void *malloc(size_t size)
 |           0x080484a1      dword [var_18h] = eax
-|           0x080484a5      edx = sym.m                                ; 0x8048468
+|           0x080484a5      edx = sym.m                                ; 0x8048468 ; sym.n
 |           0x080484aa      eax = dword [var_18h]
 |           0x080484ae      dword [eax] = edx
 |           0x080484b0      eax = dword [argv]
@@ -48,3 +48,4 @@
 |           0x080484d0      eax ()
 |           0x080484d2        
 \           0x080484d3      return 
+            ;-- main:

