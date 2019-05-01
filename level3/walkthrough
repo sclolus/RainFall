@@ -1,0 +1,23 @@
+|           0x080484ad      eax = dword [obj.stdin]                    ; obj.stdin__GLIBC_2.0 ; [0x8049860:4]=0
+|           0x080484b2      dword [nitems] = eax                       ; FILE *stream
+|           0x080484b6      dword [size] = 0x200                       ; [0x200:4]=-1 ; 512 ; int size
+|           0x080484be      eax = [format]
+|           0x080484c4      dword [esp] = eax                          ; char *s
+|           0x080484c7      sym.imp.fgets ()                           ; char *fgets(char *s, int size, FILE *stream)
+|           0x080484cc      eax = [format]
+|           0x080484d2      dword [esp] = eax                          ; const char *format
+|           0x080484d5      sym.imp.printf ()                          ; int printf(const char *format)
+|           0x080484da      eax = dword [obj.m]                        ; [0x804988c:4]=0
+|           0x080484df      var = eax - 0x40                           ; '@' ; 64
+|       ,=< 0x080484e2      if (var) goto 0x8048518
+
+We can see that a fgets on stdin is done, the result is then used as a format string for printf.
+There is also a check on the value of stored at obj.m,
+which must be 64 (0x40) in order not to take the branch that directly leaves the function.
+So we can use a %n printf exploit to modify the value at obj.m and pass the check that will call /bin/sh for us.
+To exploit %n we first need to provide it a value, as printf is variadic and will pop arguments as required by the format.
+We need to pop the right amount of variable with some conversion (%p) until we hit the start of format (our string),
+at the beginning of which we put the address of obj.m.
+We then need to calculate the amount of chars left to print so that we can modify obj.m to the value we want.
+We need to pop 3 arguments from the stack until we hit our passed address of obj.m
+cat payload - | ./level3
