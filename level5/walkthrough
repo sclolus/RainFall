@@ -1,0 +1,58 @@
+in function n:
+|           0x080484cb      eax = dword [obj.stdin]                    
+|           0x080484d0      dword [stream] = eax                       ; FILE *stream
+|           0x080484d4      dword [size] = 0x200                       ; 512 ; int size
+|           0x080484dc      eax = [format]
+|           0x080484e2      dword [esp] = eax                          ; char *s
+|           0x080484e5      sym.imp.fgets ()                           ; char *fgets(char *s, int size, FILE *stream)
+|           0x080484ea      eax = [format]
+|           0x080484f0      dword [esp] = eax                          ; const char *format
+|           0x080484f3      sym.imp.printf ()                          ; int printf(const char *format)
+|           0x080484f8      dword [esp] = 1                            ; int status
+\           0x080484ff      sym.imp.exit ()                            ; void exit(int status)
+
+Same as before, we read a format string for printf.
+However the function calls exit directly after having called printf.
+Also, there is the function o, which is not connected to the call graph but calls a shell for us.
+
+[Sections]
+Nm Paddr       Size Vaddr      Memsz Perms Name
+00 0x00000000     0 0x00000000     0 ---- 
+01 0x00000134    19 0x08048134    19 -r-- .interp
+02 0x00000148    32 0x08048148    32 -r-- .note.ABI_tag
+03 0x00000168    36 0x08048168    36 -r-- .note.gnu.build_id
+04 0x0000018c    36 0x0804818c    36 -r-- .gnu.hash
+05 0x000001b0   160 0x080481b0   160 -r-- .dynsym
+06 0x00000250   101 0x08048250   101 -r-- .dynstr
+07 0x000002b6    20 0x080482b6    20 -r-- .gnu.version
+08 0x000002cc    32 0x080482cc    32 -r-- .gnu.version_r
+09 0x000002ec    16 0x080482ec    16 -r-- .rel.dyn
+10 0x000002fc    56 0x080482fc    56 -r-- .rel.plt
+11 0x00000334    46 0x08048334    46 -r-x .init
+12 0x00000370   128 0x08048370   128 -r-x .plt
+13 0x000003f0   476 0x080483f0   476 -r-x .text
+14 0x000005cc    26 0x080485cc    26 -r-x .fini
+15 0x000005e8    16 0x080485e8    16 -r-- .rodata
+16 0x000005f8    68 0x080485f8    68 -r-- .eh_frame_hdr
+17 0x0000063c   252 0x0804863c   252 -r-- .eh_frame
+18 0x00000738     8 0x08049738     8 -rw- .ctors
+19 0x00000740     8 0x08049740     8 -rw- .dtors
+20 0x00000748     4 0x08049748     4 -rw- .jcr
+21 0x0000074c   200 0x0804974c   200 -rw- .dynamic
+22 0x00000814     4 0x08049814     4 -rw- .got
+23 0x00000818    40 0x08049818    40 -rw- .got.plt
+24 0x00000840     8 0x08049840     8 -rw- .data
+25 0x00000848     0 0x08049848    16 -rw- .bss
+26 0x00000848    42 0x00000000    42 ---- .comment
+27 0x00000872   252 0x00000000   252 ---- .shstrtab
+28 0x00000e20  1168 0x00000000  1168 ---- .symtab
+29 0x000012b0   601 0x00000000   601 ---- .strtab
+
+We can see that the GOT (global offset table) is read-write.
+Which means that we can modify it to point to the function o using a %n printf exploit.
+So we are going to write into the GOT entry for exit (at 0x08049838) to replace it for the address of the function o.
+Same as before, we use two %n to write the our desired address in order not to print (53-21)*12^23 chars.
+we wrote a script to generate our input file:
+./gen.sh && cat test - | ./level05
+we've got a SUID shell.
+

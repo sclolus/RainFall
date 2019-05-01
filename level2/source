@@ -1,8 +1,8 @@
 / (fcn) sym.p 107
-|   sym.p (int32_t arg_4h);
+|   sym.p ();
 |           ; var char *src @ ebp-0x4c
 |           ; var int32_t var_ch @ ebp-0xc
-|           ; arg int32_t arg_4h @ ebp+0x4
+|           ; var int32_t return_eip @ ebp+0x4
 |           ; var int32_t var_4h @ esp+0x4
 |           0x080484d4      push ebp
 |           0x080484d5      ebp = esp
@@ -13,7 +13,7 @@
 |           0x080484e7      eax = [src]
 |           0x080484ea      dword [esp] = eax                          ; char *s
 |           0x080484ed      sym.imp.gets ()                            ; char *gets(char *s)
-|           0x080484f2      eax = dword [arg_4h]
+|           0x080484f2      eax = dword [return_eip]
 |           0x080484f5      dword [var_ch] = eax
 |           0x080484f8      eax = dword [var_ch]
 |           0x080484fb      eax &= 0xb0000000
