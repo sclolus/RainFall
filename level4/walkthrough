@@ -1,0 +1,40 @@
+|           0x08048457      push ebp
+|           0x08048458      ebp = esp
+|           0x0804845a      esp -= 0x218
+|           0x08048460      eax = dword [obj.stdin]
+|           0x08048465      dword [stream] = eax                       ; FILE *stream
+|           0x08048469      dword [size] = 0x200                       ; 512 ; int size
+|           0x08048471      eax = [s]
+|           0x08048477      dword [esp] = eax                          ; char *s
+|           0x0804847a      sym.imp.fgets ()                           ; char *fgets(char *s, int size, FILE *stream)
+|           0x0804847f      eax = [s]
+|           0x08048485      dword [esp] = eax
+|           0x08048488      sym.p ()
+|           0x0804848d      eax = dword [obj.m]			       ; 0x08049810
+|           0x08048492      var = eax - 0x1025544
+|       ,=< 0x08048497      if (var) goto 0x80484a5
+|       |   0x08048499      dword [esp] = str.bin_cat__home_user_level5_.pass ; 0x6e69622f ; "/bin/cat /home/user/level5/.pass" ; const char *string
+|       |   0x080484a0      sym.imp.system ()                          ; int system(const char *string)
+
+/ (fcn) sym.p 19
+|   sym.p (char *format);
+|           ; arg char *format @ ebp+0x8
+|           0x08048444      push ebp
+|           0x08048445      ebp = esp
+|           0x08048447      esp -= 0x18
+|           0x0804844a      eax = dword [format]
+|           0x0804844d      dword [esp] = eax                          ; const char *format
+|           0x08048450      sym.imp.printf ()                          ; int printf(const char *format)
+
+
+This is almost the same exercice, same principle.
+We can see that an fgets is used to fill the `s` buffer which is then passed as argument to the function p.
+Its argument is used as a format string for printf.
+There also is a check on the content at obj.m:
+we need obj.m to store a value of 0x1025544 to take the branch that contains the call to /bin/cat on the .pass file.
+So we are going to use a %n printf exploit.
+This time in two times, since we need to output n characters with printf before using %n to store the value n at the address passed as parameter to printf, by doing it in two times, we don't need to output 4 zillion of chars.
+Since %n writes 4 bytes (an int) to the address, we need to start from the lower part of our value not to overwrite our first changes.
+we wrote a script that generates our file.
+./gen.sh && cat test - | ./level4
+we got our flag
