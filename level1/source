@@ -1,0 +1,32 @@
+/ (fcn) sym.run 60
+|   sym.run ();
+|           ; var size_t size @ esp+0x4
+|           ; var size_t nitems @ esp+0x8
+|           ; var FILE *stream @ esp+0xc
+|           0x08048444      push ebp
+|           0x08048445      ebp = esp
+|           0x08048447      esp -= 0x18
+|           0x0804844a      eax = dword [obj.stdout]                   
+|           0x0804844f      edx = eax
+|           0x08048451      eax = str.Good..._Wait_what                ; 0x8048570 ; "Good... Wait what?\n"
+|           0x08048456      dword [stream] = edx                       ; FILE *stream
+|           0x0804845a      dword [nitems] = 0x13                      ; 19 ; size_t nitems
+|           0x08048462      dword [size] = 1                           ; size_t size
+|           0x0804846a      dword [esp] = eax                          ; const void *ptr
+|           0x0804846d      sym.imp.fwrite ()                          ; size_t fwrite(const void *ptr, size_t size, size_t nitems, FILE *stream)
+|           0x08048472      dword [esp] = str.bin_sh                   ; 0x6e69622f ; "/bin/sh" ; const char *string
+|           0x08048479      sym.imp.system ()                          ; int system(const char *string)
+|           0x0804847e      leave 
+\           0x0804847f      return
+/ (fcn) main 23
+|   int main (int argc, char **argv, char **envp);
+|           ; var char *s @ esp+0x10
+|           0x08048480      push ebp
+|           0x08048481      ebp = esp
+|           0x08048483      esp &= 0xfffffff0
+|           0x08048486      esp -= 0x50                                
+|           0x08048489      eax = [s]                                  
+|           0x0804848d      dword [esp] = eax                          ; char *s
+|           0x08048490      sym.imp.gets ()                            ; char *gets(char *s)
+|           0x08048495      leave 
+\           0x08048496      return

