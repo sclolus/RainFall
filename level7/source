@@ -1,0 +1,31 @@
+#include <stdio.h>
+#include <unistd.h>
+#include <time.h>
+
+void	m() {
+	time_t var_time = time(NULL);
+	printf("%s - %d\n", (char*)0x08049960, var_time);
+	return ;
+}
+
+int		main(int argc, char **argv) {
+	int		*first_malloc
+	int		*third_malloc;
+
+	first_malloc = malloc(8);
+	first_malloc[0] = 1;
+	first_malloc[1] = malloc(8);
+
+	third_malloc = malloc(8);
+	third_malloc[0] = 2;
+	third_malloc[1] = malloc(8);
+
+	strcpy(first_malloc[1], argv[1]);
+	strcpy(third_malloc[1], argv[2]);
+
+	FILE *pass_file = fopen("/home/user/level8/.pass", "r");
+
+	fget((char*)0x08049960, 0x44, pass_file);
+	puts((char*)0x8048703);
+	return (0);
+}
