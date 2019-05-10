@@ -1,4 +1,7 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 
 int	main(int argc, char **argv)
 {
@@ -9,7 +12,7 @@ int	main(int argc, char **argv)
 	if (nbytes <= 9) {
 		memcpy(s1, argv[2], nbytes);
 		if (nbytes == 0x574f4c46) {
-			execl("/bin/sh", sh, 0);
+			execl("/bin/sh", "sh", 0);
 		}
 	} else {
 		return (1);
