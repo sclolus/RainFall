@@ -1,44 +1,34 @@
-/ (fcn) sym.p 107
-|   sym.p ();
-|           ; var char *src @ ebp-0x4c
-|           ; var int32_t var_ch @ ebp-0xc
-|           ; var int32_t return_eip @ ebp+0x4
-|           ; var int32_t var_4h @ esp+0x4
-|           0x080484d4      push ebp
-|           0x080484d5      ebp = esp
-|           0x080484d7      esp -= 0x68
-|           0x080484da      eax = dword [obj.stdout]
-|           0x080484df      dword [esp] = eax                          ; FILE *stream
-|           0x080484e2      sym.imp.fflush ()                          ; int fflush(FILE *stream)
-|           0x080484e7      eax = [src]
-|           0x080484ea      dword [esp] = eax                          ; char *s
-|           0x080484ed      sym.imp.gets ()                            ; char *gets(char *s)
-|           0x080484f2      eax = dword [return_eip]
-|           0x080484f5      dword [var_ch] = eax
-|           0x080484f8      eax = dword [var_ch]
-|           0x080484fb      eax &= 0xb0000000
-|           0x08048500      var = eax - 0xb0000000
-|       ,=< 0x08048505      if (var) goto 0x8048527
-|       |   0x08048507      eax = str.p                                ; 0x8048620 ; "(%p)\n"
-|       |   0x0804850c      edx = dword [var_ch]
-|       |   0x0804850f      dword [var_4h] = edx
-|       |   0x08048513      dword [esp] = eax                          ; const char *format
-|       |   0x08048516      sym.imp.printf ()                          ; int printf(const char *format)
-|       |   0x0804851b      dword [esp] = 1
-|       |   0x08048522      sym.imp._exit ()
-|       `-> 0x08048527      eax = [src]
-|           0x0804852a      dword [esp] = eax                          ; const char *s
-|           0x0804852d      sym.imp.puts ()                            ; int puts(const char *s)
-|           0x08048532      eax = [src]
-|           0x08048535      dword [esp] = eax                          ; const char *src
-|           0x08048538      sym.imp.strdup ()                          ; char *strdup(const char *src)
-|           0x0804853d      leave 
-\           0x0804853e      return
-/ (fcn) main 13
-|   int main (int argc, char **argv, char **envp);
-|           0x0804853f      push ebp
-|           0x08048540      ebp = esp
-|           0x08048542      esp &= 0xfffffff0
-|           0x08048545      sym.p ()
-|           0x0804854a      leave 
-\           0x0804854b      return
+#undef _ISOC11_SOURCE
+#define _ISOC99_SOURCE
+
+#include <stdio.h>
+#include <unistd.h>
+#include <string.h>
+#include <stdint.h>
+
+
+char	*p(void	*return_eip)
+{
+	void	*pointer;
+	char	buffer[64];
+
+	fflush(stdout);
+	gets(buffer);
+	pointer = return_eip;
+	if (((unsigned long)pointer & 0xb0000000) != 0xb0000000)
+		goto exit;
+
+	printf("(%p)\n", pointer);
+	_exit(1);
+exit:
+	puts(buffer);
+	return strdup(buffer);
+
+}
+
+int	main(int argc, char **argv)
+{
+now:
+	p((void *)&&now + 5);
+
+}
