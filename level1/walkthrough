@@ -1,12 +1,12 @@
 disassembly of the main gives:
-0x08048480      55             push ebp                                                                                     
-0x08048481      89e5           mov ebp, esp                                                                                 
+0x08048480      55             push ebp
+0x08048481      89e5           mov ebp, esp
 0x08048483      83e4f0         and esp, 0xfffffff0
 0x08048486      83ec50         sub esp, 0x50
 0x08048489      8d442410       lea eax, [s]
-0x0804848d      890424         mov dword [esp], eax        ; char *s                                                        
-0x08048490      e8abfeffff     call sym.imp.gets           ;[3] ; char *gets(char *s)                                       
-0x08048495      c9             leave                                                                                        
+0x0804848d      890424         mov dword [esp], eax        ; char *s
+0x08048490      e8abfeffff     call sym.imp.gets           ;[3] ; char *gets(char *s)
+0x08048495      c9             leave
 0x08048496      c3             ret
 
 `gets` is called, which is unsafe, we can just overwrite the stack so that the ret returns on some address containing a shellcode.
