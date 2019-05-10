@@ -1,0 +1,35 @@
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
+#include <stdlib.h>
+
+int	main(int argc, char **argv)
+{
+	FILE *file = fopen("/home/user/end/.pass", "r");
+	char buffer[66]; //not sure aboutsize
+	char *tmp = buffer;
+
+	for (int i = 33; i != 0 ; tmp++, i--) {
+		*tmp = 0;
+	}
+
+	if (file == NULL) {
+		return (0xffffffff);
+	}
+	if (argc != 2) {
+		return (0xffffffff);
+	}
+
+	fread(buffer, 1, 66, file);
+	buffer[65] = 0;
+	*(buffer + atoi(argv[1])) = 0;
+	fread(buffer + 66, 1, 65, file);
+	fclose(file);
+	if (strcmp(buffer, argv[1])) {
+		puts(buffer + 66);
+	} else {
+		execl("/bin/sh", "sh", 0);
+		return (0);
+	}
+	return (0);
+}

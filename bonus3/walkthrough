@@ -1,0 +1,31 @@
+The program opens our flag:
+0x08048502      baf0860408     edx = 0x80486f0
+0x08048507      b8f2860408     eax = str.home_user_end_.pass    ; 0x80486f2 ; "/home/user/end/.pass"
+0x0804850c      89542404       dword [size] = edx
+0x08048510      890424         dword [esp] = eax
+0x08048513      e8f8feffff     sym.imp.fopen ()
+
+It reads it with fread with a buffer on the stack:
+
+ 0x0804854d      8d442418       eax = [ptr]
+ 0x08048551      8b94249c0000.  edx = dword [local_9ch]
+ 0x08048558      8954240c       dword [stream] = edx
+ 0x0804855c      c74424084200.  dword [nmemb] = 0x42
+ 0x08048564      c74424040100.  dword [size] = 1
+ 0x0804856c      890424         dword [esp] = eax
+ 0x0804856f      e85cfeffff     sym.imp.fread ()
+
+
+It then does an atoi of argv[1], use the result to dereference a pointer resulting from the result + the buffer address and put a 0 there:
+0x08048579      8b450c         eax = dword [str]
+0x0804857c      83c004         eax += 4
+0x0804857f      8b00           eax = dword [eax]
+0x08048581      890424         dword [esp] = eax
+0x08048584      e8a7feffff     sym.imp.atoi ()
+0x08048589      c644041800     byte [esp + eax + 0x18] = 0
+
+At some point it compares with a strcmp the buffer of fread (which contains at this point our flag) against our argv[1] if the strings are different, the programs diverges after printing with puts our buffer + 0x42 (which is just after the flag). However if the strings matche, the program launch a SUID-shell for us with execl.
+Atoi converts the initial portion of the string pointed by its parameter into an int representation. It means that if there is no valid initial portion, it will return 0.
+If atoi returns zero, buffer + atoi(argv[1]) is buffer, so the resulting string is "".
+So we only have to do: ./bonus3 "" (to have a zero-length string as our first parameter).
+And we now have a SUID-shell

@@ -1,2 +1,0 @@
- export i=1208263039 ; while [ 1 ] ; do echo "$i"; echo salut | ./bonus3 "$i" | hexdump -C ; export i=$((i+1)); done
-
