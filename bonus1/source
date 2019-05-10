@@ -1,0 +1,18 @@
+#include <stdio.h>
+
+int	main(int argc, char **argv)
+{
+	int		nbytes;
+	char	s1[38];
+
+	nbytes = atoi(argv[1]);
+	if (nbytes <= 9) {
+		memcpy(s1, argv[2], nbytes);
+		if (nbytes == 0x574f4c46) {
+			execl("/bin/sh", sh, 0);
+		}
+	} else {
+		return (1);
+	}
+	return (0);
+}
