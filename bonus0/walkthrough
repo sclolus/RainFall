@@ -1,0 +1,49 @@
+The function p takes two parameters.
+It prints the second parameter, then read stdin for 4096 bytes into a 4096 bytes buffer on the stack.
+It then searches with strchr a newline inside the before and put a zero at the location returned strchr without checking that strchr did not return null.
+Which explains why it crashes when inputing something without a newline.
+It then does a strncpy of dest from buffer with a maximum byte number of 20 bytes.
+
+The function pp takes one parameter, which is a pointer.
+This fonction is called from main with an address that is 22 bytes above the esp of main.
+
+The function pp calls p two times:
+0x08048526      c7442404a086.  dword [src] = 0x80486a0     ; " - "
+0x0804852e      8d45d0         eax = [local_30h]
+0x08048531      890424         dword [esp] = eax
+0x08048534      e87bffffff     sym.p ()
+which is p(&local_30h, " - ");
+local_30h is located at ebp-0x30.
+then:
+0x08048539      c7442404a086.  dword [src] = 0x80486a0     ; " - "
+0x08048541      8d45e4         eax = [local_1ch]
+0x08048544      890424         dword [esp] = eax
+0x08048547      e868ffffff     sym.p ()
+which is p(&local_1ch, " - ");
+local_1ch is located at ebp-0x1c.
+
+Those two buffers are 20 bytes each and are located next to each other.
+local_3 is just above local_2 (in addresses, below on the stack).
+
+It then does a strcpy(dest, &local_30h);
+With dest being the argument of the function.
+
+It then counts the length of the resulting string at dest by doing:
+0x08048579      f2ae           repne scasb al,byte es:[edi]
+0x0804857b      89c8           eax = ecx
+0x0804857d      f7d0           eax = !eax
+0x0804857f      83e801         eax -= 1
+
+ecx is started at 0xffffffff, being decremented at each cycle of repne scasb.
+This is a two's complement trick.
+
+It then takes the length + dest, puts two bytes ' ''\0' at the resulting address (the address poiting the \0 of dest) and does a strcat(dest, local_1ch);
+
+The address passed to pp by main is located at esp+22 and at the entrance of main, esp is decremented by 64, which means we must overwrite 42 bytes before overwrite the stored ebp of the function.
+
+Since the function p copies at most 20 bytes at each call, this sums up to 40 bytes. However we can make it so that the first buffer local_30h is not null terminated (as strncpy will make it if the \0 is not met before the maximum number of byte) and since it adjacent to local_1ch we can copy more than 20 bytes.
+
+after adding ' ''\0' at the end of the resulting string, it appends local_3.
+Since the read buffer of p is on the stack, and is one page big, we can stock a shellcode that won't be modified much since most of this buffer is never modified except by p.
+
+So by stocking a NOP-slided shellcode on the stack and overwriting the return eip of main with an address to the NOP-slide, executing the shellcode and giving us the SUID-shell.

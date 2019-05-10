@@ -1,0 +1,52 @@
+#include <stdio.h>
+#include <unistd.h>
+#include <string.h>
+#include <stdint.h>
+
+void	p(char *dest, char *s)
+{
+	char	buffer[0x1000];
+	size_t	nbyte;
+
+	puts(s);
+	nbyte = 0x1000;
+	read(0, buffer, 0x1000);
+
+	strchr(buffer, '\n')[0] = 0;
+	nbyte = 0x14;
+	strncpy(dest, buffer, nbyte);
+}
+
+void	pp(char *dest)
+{
+	char	local_3[20];
+	char	local_2[20];
+
+	p(local_2, " - ");
+	p(local_3, " - ");
+	strcpy(dest, local_2);
+
+	uint32_t	i = 0xffffffff;
+	char		*tmp = dest;
+
+	while (i--) {
+		if (*tmp == 0) {
+			break;
+		}
+		tmp++;
+	}
+
+	i = ~i;
+	i -= 1;
+	tmp = dest + i;
+	*((uint16_t *)tmp) = *((uint16_t*)" ");
+	strcat(dest, local_3);
+}
+
+int	main() {
+	char	s[42];
+
+	pp(s);
+	puts(s);
+	return (0);
+}
