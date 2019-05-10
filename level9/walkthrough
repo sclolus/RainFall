@@ -1,0 +1,34 @@
+The disassembly of this level the result of the compilation of  a OO style programming language, most likely C++.
+
+First the main checks if there is some args, else it exits.
+
+...
+0x080485fe      var = dword [arg_8h] - 1
+0x08048602      if (var > 0) goto 0x8048610
+0x08048604      dword [esp] = 1
+0x0804860b      sym.imp._exit ()
+0x08048610      dword [esp] = 0x6c
+...
+
+Followed by this process twice :
+
+generate a new unsigned int
+calls n_int on it with a fixed value
+	>takes the uint pointer and a value
+	>calls fcn_0804873a, stores the result in our uint[0]
+		>takes the uint pointer and a value
+		>adds to *(&value + 0x68) the value in *(pointer + 0x68)
+		>returns *(pointer + 0x68)
+	>sets the value of *(pointer + 0x68) to our value
+	>returns the value
+
+Then setAnnotation_char is called
+It takes a pointer and argv[1], then memcpy((pointer + 4), argv[1], strlen(argv[1]))
+This is where we have influence on code execution.
+Since the pointer redirects to the address of the first uint generated we can overwrite the second one.
+Then edx is called, which contains the pointer contained at *second_uint_copy dereferenced.
+When the program executes without memory corruption, its value will always be fcn.0804873a.
+
+The exploit consists in placing a pointer which when dereferenced jumps to our shellcode (placed at the beggining of our exploit string).
+Using gdb we pad until we can write to *second_uint_copy, at this emplacement we write a pointer to the next dword.
+This pointer will invoke bash when called.

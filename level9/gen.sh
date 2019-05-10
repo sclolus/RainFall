@@ -1,3 +1,4 @@
+#!/bin/bash
 
 rm -f inject
 cat bin >> inject
