@@ -30,5 +30,4 @@ We can overwrite the GOT entry of puts, redirecting to sym.m
 
 To access *(var_18ch + 4) we need to fill the 16 bytes of the var_1ch then fill the first four bytes then write our
 target address 0x08049928 (sym.puts GOT entry).
-On the second strcpy, we determine what will be the code executed when puts is called, here sym.m (0x0804850b)
-
+On the second strcpy, we determine what will be the code executed when puts is called, here sym.m (0x080484f4)

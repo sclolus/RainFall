@@ -2,13 +2,17 @@
 #include <unistd.h>
 #include <time.h>
 
-void	m() {
+char c[0x4e];
+
+void	m()
+{
 	time_t var_time = time(NULL);
-	printf("%s - %d\n", (char*)0x08049960, var_time);
+	printf("%s - %d\n", c, var_time);
 	return ;
 }
 
-int		main(int argc, char **argv) {
+int		main(int argc, char **argv)
+{
 	int		*first_malloc
 	int		*third_malloc;
 
@@ -25,7 +29,7 @@ int		main(int argc, char **argv) {
 
 	FILE *pass_file = fopen("/home/user/level8/.pass", "r");
 
-	fget((char*)0x08049960, 0x44, pass_file);
+	fget(c, 0x44, pass_file);
 	puts((char*)0x8048703);
 	return (0);
 }
