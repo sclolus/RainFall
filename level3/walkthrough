@@ -1,15 +1,15 @@
-|           0x080484ad      eax = dword [obj.stdin]                    ; obj.stdin__GLIBC_2.0 ; [0x8049860:4]=0
-|           0x080484b2      dword [nitems] = eax                       ; FILE *stream
-|           0x080484b6      dword [size] = 0x200                       ; [0x200:4]=-1 ; 512 ; int size
-|           0x080484be      eax = [format]
-|           0x080484c4      dword [esp] = eax                          ; char *s
-|           0x080484c7      sym.imp.fgets ()                           ; char *fgets(char *s, int size, FILE *stream)
-|           0x080484cc      eax = [format]
-|           0x080484d2      dword [esp] = eax                          ; const char *format
-|           0x080484d5      sym.imp.printf ()                          ; int printf(const char *format)
-|           0x080484da      eax = dword [obj.m]                        ; [0x804988c:4]=0
-|           0x080484df      var = eax - 0x40                           ; '@' ; 64
-|       ,=< 0x080484e2      if (var) goto 0x8048518
+0x080484ad      eax = dword [obj.stdin]                    ; obj.stdin__GLIBC_2.0 ; [0x8049860:4]=0
+0x080484b2      dword [nitems] = eax                       ; FILE *stream
+0x080484b6      dword [size] = 0x200                       ; [0x200:4]=-1 ; 512 ; int size
+0x080484be      eax = [format]
+0x080484c4      dword [esp] = eax                          ; char *s
+0x080484c7      sym.imp.fgets ()                           ; char *fgets(char *s, int size, FILE *stream)
+0x080484cc      eax = [format]
+0x080484d2      dword [esp] = eax                          ; const char *format
+0x080484d5      sym.imp.printf ()                          ; int printf(const char *format)
+0x080484da      eax = dword [obj.m]                        ; [0x804988c:4]=0
+0x080484df      var = eax - 0x40                           ; '@' ; 64
+0x080484e2      if (var) goto 0x8048518
 
 We can see that a fgets on stdin is done, the result is then used as a format string for printf.
 There is also a check on the value of stored at obj.m,
