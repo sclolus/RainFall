@@ -1,0 +1,64 @@
+#include <stdio.h>
+#include <unistd.h>
+#include <stdint.h>
+#include <string.h>
+#include <stdlib.h>
+
+static void *obj_service = NULL;
+static int	*obj_auth = NULL;
+
+int	main(void)
+{
+	char		buffer[0x80];
+	uint32_t	i;
+
+print_and_gets:
+	printf("%p, %p \n", obj_auth, obj_service);
+	if (!fgets(buffer, 0x80, stdin))
+		goto exit;
+
+	for (uint32_t i = 0; i < 5; i++) {
+		if (buffer[i] != "auth "[i])
+			goto cmp_reset;
+	}
+	obj_auth = malloc(4);
+	*obj_auth = 0;
+
+	char	*tmp = buffer + 5;
+	i = 0;
+	while (tmp[i])
+		i++;
+	if (i > 0x1e)
+		goto cmp_reset;
+
+	strcpy((char *)obj_auth, buffer + 5);
+cmp_reset:
+	for (uint32_t i = 0; i < 5; i++) {
+		if (buffer[i] != "reset"[i])
+			goto cmp_service;
+	}
+	free(obj_auth);
+cmp_service:
+
+	for (uint32_t i = 0; i < 6; i++) {
+		if (buffer[i] != "service"[i])
+			goto cmp_login;
+	}
+	obj_service = strdup(buffer + 7);
+
+cmp_login:
+	for (uint32_t i = 0; i < 5; i++) {
+		if (buffer[i] != "login"[i])
+			goto print_and_gets;
+	}
+
+
+	if (obj_auth[32] == 0) {
+		fwrite("Password:\n", 1, 10, stdout);
+		goto print_and_gets;
+	}
+	system("/bin/sh");
+	goto print_and_gets;
+exit:
+	return (0);
+}
