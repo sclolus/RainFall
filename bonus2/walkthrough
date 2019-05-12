@@ -1,0 +1,30 @@
+This program checks if 2 args are provided, else it returns
+...
+0x08048538      cmp dword [arg_8h], 3
+0x0804853c      je 0x8048548
+0x0804853e      mov eax, 1
+0x08048543      jmp 0x8048630		;;end of main
+0x08048548      lea ebx, [dest]
+...
+
+It then bzero the dest buffer, strncpy the first 0x28 bytes of argv[1] on dest.
+Then the first 0x20 bytes of argv[2] on dest + 0x20
+
+
+With the value of getenv("LANG"), it loads the language global variable, checking the fist 2 bytes.
+	>default = 0: "Hello "
+	>1: "Hyv\u00e4\u00e4 p\u00e4iv\u00e4\u00e4 "
+	>2: "Goedemiddag! "
+This branching is not that important, it will only affect the alignement of the memory corruption perfomed later.
+
+Then it writes dest on the stack and calls greetuser. This is where we can redirect code execution.
+...
+0x08048618      edx = esp
+0x0804861a      ebx = [dest]
+0x0804861e      eax = 0x13
+0x08048623      edi = edx                                                                                             0x08048625      esi = ebx
+0x08048627      ecx = eax
+0x08048629      rep movsd dword es:[edi],dword ptr [esi]
+0x0804862b      sym.greetuser ()
+...
+When greetuser is called the stack can be setup so it's return will pop to our shellcode (placed either on env or argv), the main problem is to place a reference to our shellcode when leave is called, then ret jumps to it.
