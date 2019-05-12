@@ -30,6 +30,6 @@ int		main(int argc, char **argv)
 	FILE *pass_file = fopen("/home/user/level8/.pass", "r");
 
 	fget(c, 0x44, pass_file);
-	puts((char*)0x8048703);
+	puts("~~");
 	return (0);
 }
