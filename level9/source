@@ -4,7 +4,7 @@
 
 uint32_t	*new_uint(uint32_t val)
 {
-	uint32_t *new = malloc(sizeof(uint32_t));
+	uint32_t *new = malloc(sizeof(uint32_t) * val);
 	*new = val;
 	return (new);
 }
@@ -51,9 +51,7 @@ int main(int argc, char **argv)
 	n_int(second_uint, 6);
 	first_uint_copy = first_uint;
 	second_uint_copy = second_uint;
-	tmp = argv[1];
 	setAnnotation_char((void*)first_uint_copy, argv[1]);
-	tmp = first_uint_copy;
-	((void (*)(int32_t *))((void*)*second_uint_copy))(second_uint_copy);
+	((void (*)(int32_t *, int32_t*))(**((uint32_t**)second_uint_copy)))(second_uint_copy, first_uint_copy);
 	return (0);
 }
