@@ -15,7 +15,7 @@ void v()
 	size = 0x200;
     fgets(format, size, stream_1);
 	printf(format);
-	if (m - 0x40)
+	if (m != 0x40)
 		return;
 	stream_2 = stdout;
 	stream_1 = (FILE *)0xc;
