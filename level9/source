@@ -13,15 +13,17 @@ uint32_t fcn_0804873a(uint32_t *new, uint32_t *val)
 {
 	uint32_t edx;
 
-	edx = *(new + 0x68);
-	*(val + 0x68) += edx;
+	edx = *((uint32_t*)((char*)new + 0x68));
+	*((uint32_t*)((char*)val + 0x68)) += edx;
 	return (edx);
 }
 
+uint32_t	*vtable_entry_fcn_0804873a = (uint32_t*)&fcn_0804873a;
+
 int32_t n_int(int32_t *new, int32_t val)
 {
-	*new = (int32_t)&fcn_0804873a;
-	*(new + 0x68) = val;
+	*new = (int32_t)&vtable_entry_fcn_0804873a;
+	*((int32_t *)((char*)new + 0x68)) = val;
 	return (val);
 }
 
