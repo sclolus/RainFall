@@ -22,8 +22,12 @@ The next return address is in ebp+0x8.
 Since the buffer used by gets is located at ebp-0x4c, we have got 76 bytes to fill until we hit the saved ebp.
 After those bytes, we have got 4 bytes of the stored ebp to fill, then the return eip, then the second return eip.
 
+/tmp/script.sh > /tmp/input
+export SHELLCODE=`/tmp/shellcode.sh`
+
 So after creating a script to make our input file, and exported a NOP-slided shellcode in the environment:
-cat file - | ./level2
+
+cat /tmp/input - | ./level2
 
 we've got a SUID shell.
 
