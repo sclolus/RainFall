@@ -34,6 +34,7 @@ There also is a check on the content at obj.m:
 we need obj.m to store a value of 0x1025544 to take the branch that contains the call to /bin/cat on the .pass file.
 So we are going to use a %n printf exploit.
 This time in two times, since we need to output n characters with printf before using %n to store the value n at the address passed as parameter to printf, by doing it in two times, we don't need to output 4 zillion of chars.
+There is a total of 48 bytes between the top of the stack and the start of the `s` buffer, therefor, popping 4 * 11 + 4 bytes will line up the injected addresses with the variadic argument list.
 Since %n writes 4 bytes (an int) to the address, we need to start from the lower part of our value not to overwrite our first changes.
 we wrote a script that generates our file.
 ./gen.sh && cat test - | ./level4
