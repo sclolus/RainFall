@@ -10,7 +10,7 @@ int	main(int argc, char **argv)
 
 	nbytes = atoi(argv[1]);
 	if (nbytes <= 9) {
-		memcpy(s1, argv[2], nbytes);
+		memcpy(s1, argv[2], nbytes * 4);
 		if (nbytes == 0x574f4c46) {
 			execl("/bin/sh", "sh", 0);
 		}

