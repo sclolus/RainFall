@@ -6,10 +6,10 @@ var_18ch = malloc(8);
 *var_18ch = 2;
 *(var_18ch + 4) = malloc(8);
 
-Then it strcpy(var_1ch + 4, argv[1]);
-also it strcpy(var_18ch + 4, argv[2]);
+Then it strcpy(*(var_1ch + 4), argv[1]);
+also it strcpy(*(var_18ch + 4), argv[2]);
 
-Since the mallocs are contiguous, we can affect the second strcpy with the first one.
+Since the mallocs are contiguous (with padding to 16 bytes alignment), we can affect the second strcpy with the first one.
 *(var_18ch + 4) being dependent on argv[1], we can write our argv[2] anywhere.
 
 At the end of the main we can see the pass is not printed, when it tries to puts a hardcoded address.
@@ -28,6 +28,5 @@ The goal will be to redirect execution after the fgets, which writes the pass on
 
 We can overwrite the GOT entry of puts, redirecting to sym.m
 
-To access *(var_18ch + 4) we need to fill the 16 bytes of the var_1ch then fill the first four bytes then write our
-target address 0x08049928 (sym.puts GOT entry).
+To access *(var_18ch + 4) we need to fill the 16 bytes of the var_1ch (8 bytes malloc'd + 8 bytes of padding to alignment) then fill the first four bytes of var_18ch then write our target address 0x08049928 (sym.puts GOT entry).
 On the second strcpy, we determine what will be the code executed when puts is called, here sym.m (0x080484f4)
