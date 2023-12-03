@@ -6,7 +6,7 @@
 int	main(int argc, char **argv)
 {
 	int		nbytes;
-	char	s1[38];
+	char	s1[40];
 
 	nbytes = atoi(argv[1]);
 	if (nbytes <= 9) {
