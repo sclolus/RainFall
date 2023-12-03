@@ -10,7 +10,7 @@ void	p(char *dest, char *s)
 
 	puts(s);
 	nbyte = 0x1000;
-	read(0, buffer, 0x1000);
+	read(0, buffer, nbyte);
 
 	strchr(buffer, '\n')[0] = 0;
 	nbyte = 0x14;
