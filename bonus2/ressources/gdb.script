@@ -1,8 +1,0 @@
-break *0x804851c
-layout asm
-set disassembly-flavor intel
-run
-x/20x $ebp
-
-
-refresh
