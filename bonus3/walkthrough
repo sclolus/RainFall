@@ -24,8 +24,17 @@ It then does an atoi of argv[1], use the result to dereference a pointer resulti
 0x08048584      e8a7feffff     sym.imp.atoi ()
 0x08048589      c644041800     byte [esp + eax + 0x18] = 0
 
-At some point it compares with a strcmp the buffer of fread (which contains at this point our flag) against our argv[1] if the strings are different, the programs diverges after printing with puts our buffer + 0x42 (which is just after the flag). However if the strings matche, the program launch a SUID-shell for us with execl.
+At some point it compares with a strcmp the buffer of fread (which contains at this point our flag) against our argv[1] if the strings are different, the programs diverges after printing with puts our buffer + 0x42 (which is just after the flag). However if the strings match, the program launch a SUID-shell for us with execl.
 Atoi converts the initial portion of the string pointed by its parameter into an int representation. It means that if there is no valid initial portion, it will return 0.
 If atoi returns zero, buffer + atoi(argv[1]) is buffer, so the resulting string is "".
 So we only have to do: ./bonus3 "" (to have a zero-length string as our first parameter).
-And we now have a SUID-shell
+And we now have a SUID-shell:
+
+bonus3@RainFall:~$ ./bonus3 ""
+$ whoami
+end
+$ cat /home/user/end/.pass
+3321b6f81659f9a71c76616f606e4b50189cecfea611393d5d649f75e157353c
+$ 
+
+

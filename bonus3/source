@@ -1,3 +1,4 @@
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
@@ -5,9 +6,10 @@
 
 int	main(int argc, char **argv)
 {
-	FILE *file = fopen("/home/user/end/.pass", "r");
-	char buffer[66]; //not sure aboutsize
-	char *tmp = buffer;
+	// 0xa0 = 160 bytes reserved on stack
+	FILE		*file = fopen("/home/user/end/.pass", "r");
+	char		buffer[132];
+	uint32_t	*tmp = (uint32_t *)buffer;
 
 	for (int i = 33; i != 0 ; tmp++, i--) {
 		*tmp = 0;
@@ -16,6 +18,7 @@ int	main(int argc, char **argv)
 	if (file == NULL) {
 		return (0xffffffff);
 	}
+	
 	if (argc != 2) {
 		return (0xffffffff);
 	}
@@ -25,11 +28,12 @@ int	main(int argc, char **argv)
 	*(buffer + atoi(argv[1])) = 0;
 	fread(buffer + 66, 1, 65, file);
 	fclose(file);
+	
 	if (strcmp(buffer, argv[1])) {
 		puts(buffer + 66);
 	} else {
 		execl("/bin/sh", "sh", 0);
-		return (0);
 	}
+	
 	return (0);
 }
