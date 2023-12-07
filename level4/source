@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-int32_t	m = 0;
+int32_t	m;
 
 void	p(char *format)
 {
