@@ -1,20 +1,26 @@
-0x08048ec0      55             push ebp                                                                           
-0x08048ec1      89e5           mov ebp, esp                                                                       
-0x08048ec3      83e4f0         and esp, 0xfffffff0                                                                
-0x08048ec6      83ec20         sub esp, 0x20                                                                      
-0x08048ec9      8b450c         mov eax, dword [str]
-0x08048ecc      83c004         add eax, 4                                                                         
-0x08048ecf      8b00           mov eax, dword [eax]                                                               
-0x08048ed1      890424         mov dword [esp], eax
-0x08048ed4      e837080000     call sym.atoi
-0x08048ed9      3da7010000     cmp eax, 0x1a7              ; this value is 423
-0x08048ede      7578           jne 0x8048f58                                                                      
-0x08048ee0      c7042448530c.  mov dword [esp], str.bin_sh    ; [0x80c5348:4]=0x6e69622f ; "/bin/sh"              
-0x08048ee7      e8047d0000     call sym.__strdup
-0x08048eec      89442410       mov dword [var_10h], eax                                                           
-0x08048ef0      c74424140000.  mov dword [var_14h], 0
+08048ec0 <main>:
+ 8048ec0:	55                   	push   ebp
+ 8048ec1:	89 e5                	mov    ebp,esp
+ 8048ec3:	83 e4 f0             	and    esp,0xfffffff0
+ 8048ec6:	83 ec 20             	sub    esp,0x20
+ 8048ec9:	8b 45 0c             	mov    eax,DWORD PTR [ebp+0xc]
+ 8048ecc:	83 c0 04             	add    eax,0x4
+ 8048ecf:	8b 00                	mov    eax,DWORD PTR [eax]
+ 8048ed1:	89 04 24             	mov    DWORD PTR [esp],eax
+ 8048ed4:	e8 37 08 00 00       	call   8049710 <atoi>
+ 8048ed9:	3d a7 01 00 00       	cmp    eax,0x1a7 ; this value is 423
+ 8048ede:	75 78                	jne    8048f58 <main+0x98>
+ 8048ee0:	c7 04 24 48 53 0c 08 	mov    DWORD PTR [esp],0x80c5348 ; "/bin/sh"
+ 8048ee7:	e8 04 7d 00 00       	call   8050bf0 <__strdup>
+ 8048eec:	89 44 24 10          	mov    DWORD PTR [esp+0x10],eax
+ 8048ef0:	c7 44 24 14 00 00 00 	mov    DWORD PTR [esp+0x14],0x0
+
 
 We can see that the program simply checks against the first parameter converted to an int with atoi.
-The program checks this value against 423 (0x1a7).
-./level0 423
-enjoy !
+The program checks this value against 423 (0x1a7), and if it is 423, executes a shell
+level0@RainFall:~$ ./level0 423
+$ whoami
+level1
+$ cat /home/user/level1/.pass
+1fe8a524fa4bec01ca4ea2a869af2a02260d4a7d5fe7e7c24d8617e6dca12d3a
+
