@@ -1,28 +1,28 @@
 The program opens our flag:
-0x08048502      baf0860408     edx = 0x80486f0
-0x08048507      b8f2860408     eax = str.home_user_end_.pass    ; 0x80486f2 ; "/home/user/end/.pass"
-0x0804850c      89542404       dword [size] = edx
-0x08048510      890424         dword [esp] = eax
-0x08048513      e8f8feffff     sym.imp.fopen ()
+ 8048502:	ba f0 86 04 08       	mov    edx,0x80486f0	; "r"
+ 8048507:	b8 f2 86 04 08       	mov    eax,0x80486f2	; "/home/user/end/.pass"
+ 804850c:	89 54 24 04          	mov    DWORD PTR [esp+0x4],edx
+ 8048510:	89 04 24             	mov    DWORD PTR [esp],eax
+ 8048513:	e8 f8 fe ff ff       	call   8048410 <fopen@plt>
 
 It reads it with fread with a buffer on the stack:
-
- 0x0804854d      8d442418       eax = [ptr]
- 0x08048551      8b94249c0000.  edx = dword [local_9ch]
- 0x08048558      8954240c       dword [stream] = edx
- 0x0804855c      c74424084200.  dword [nmemb] = 0x42
- 0x08048564      c74424040100.  dword [size] = 1
- 0x0804856c      890424         dword [esp] = eax
- 0x0804856f      e85cfeffff     sym.imp.fread ()
-
+ 804854d:	8d 44 24 18          	lea    eax,[esp+0x18]
+ 8048551:	8b 94 24 9c 00 00 00 	mov    edx,DWORD PTR [esp+0x9c]
+ 8048558:	89 54 24 0c          	mov    DWORD PTR [esp+0xc],edx
+ 804855c:	c7 44 24 08 42 00 00 	mov    DWORD PTR [esp+0x8],0x42
+ 8048563:	00 
+ 8048564:	c7 44 24 04 01 00 00 	mov    DWORD PTR [esp+0x4],0x1
+ 804856b:	00 
+ 804856c:	89 04 24             	mov    DWORD PTR [esp],eax
+ 804856f:	e8 5c fe ff ff       	call   80483d0 <fread@plt>
 
 It then does an atoi of argv[1], use the result to dereference a pointer resulting from the result + the buffer address and put a 0 there:
-0x08048579      8b450c         eax = dword [str]
-0x0804857c      83c004         eax += 4
-0x0804857f      8b00           eax = dword [eax]
-0x08048581      890424         dword [esp] = eax
-0x08048584      e8a7feffff     sym.imp.atoi ()
-0x08048589      c644041800     byte [esp + eax + 0x18] = 0
+ 8048579:	8b 45 0c             	mov    eax,DWORD PTR [ebp+0xc]
+ 804857c:	83 c0 04             	add    eax,0x4
+ 804857f:	8b 00                	mov    eax,DWORD PTR [eax]
+ 8048581:	89 04 24             	mov    DWORD PTR [esp],eax
+ 8048584:	e8 a7 fe ff ff       	call   8048430 <atoi@plt>
+ 8048589:	c6 44 04 18 00       	mov    BYTE PTR [esp+eax*1+0x18],0x0
 
 At some point it compares with a strcmp the buffer of fread (which contains at this point our flag) against our argv[1] if the strings are different, the programs diverges after printing with puts our buffer + 0x42 (which is just after the flag). However if the strings match, the program launch a SUID-shell for us with execl.
 Atoi converts the initial portion of the string pointed by its parameter into an int representation. It means that if there is no valid initial portion, it will return 0.
@@ -35,6 +35,5 @@ $ whoami
 end
 $ cat /home/user/end/.pass
 3321b6f81659f9a71c76616f606e4b50189cecfea611393d5d649f75e157353c
-$ 
 
 
