@@ -1,11 +1,9 @@
 This program checks if 2 args are provided, else it returns
-...
-0x08048538      cmp dword [arg_8h], 3
-0x0804853c      je 0x8048548
-0x0804853e      mov eax, 1
-0x08048543      jmp 0x8048630		;;end of main
-0x08048548      lea ebx, [dest]
-...
+ 8048538:	83 7d 08 03          	cmp    DWORD PTR [ebp+0x8],0x3
+ 804853c:	74 0a                	je     8048548 <main+0x1f>
+ 804853e:	b8 01 00 00 00       	mov    eax,0x1
+ 8048543:	e9 e8 00 00 00       	jmp    8048630 <main+0x107>
+ 8048548:	8d 5c 24 50          	lea    ebx,[esp+0x50]	; dest
 
 It then bzero the dest buffer, strncpy the first 0x28 bytes of argv[1] on dest.
 Then the first 0x20 bytes of argv[2] on dest + 0x28
@@ -19,13 +17,14 @@ This branching is important, as it determines how many bytes we'll be able to wr
 
 Then it writes dest on the stack and calls greetuser.
 ...
-0x08048618      edx = esp
-0x0804861a      ebx = [dest]
-0x0804861e      eax = 0x13
-0x08048623      edi = edx                                                                                             0x08048625      esi = ebx
-0x08048627      ecx = eax
-0x08048629      rep movsd dword es:[edi],dword ptr [esi]
-0x0804862b      sym.greetuser ()
+ 8048618:	89 e2                	mov    edx,esp
+ 804861a:	8d 5c 24 50          	lea    ebx,[esp+0x50]			; dest
+ 804861e:	b8 13 00 00 00       	mov    eax,0x13
+ 8048623:	89 d7                	mov    edi,edx
+ 8048625:	89 de                	mov    esi,ebx
+ 8048627:	89 c1                	mov    ecx,eax
+ 8048629:	f3 a5                	rep movs DWORD PTR es:[edi],DWORD PTR ds:[esi]
+ 804862b:	e8 54 fe ff ff       	call   8048484 <greetuser>
 ...
 In greetuser, a buffer on the stack located at ebp-0x48 is filled with some greetings corresponding with the current LANG, out of the three possibilities, we pick the longest greating: the one with LANG=fi, as to reach the furthest on the stack and overwrite the return eip of greetuser, this is where we can redirect code execution. :
 export LANG=fi
