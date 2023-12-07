@@ -29,6 +29,6 @@ exit:
 int	main(int argc, char **argv)
 {
 now:
-	p((void *)&&now + 5);
+	p((void *)(&&now + 5));
 
 }

