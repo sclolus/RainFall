@@ -12,8 +12,9 @@ int	m()
 	return puts("Nope");
 }
 
-int	main(int argc, char **argv, char **env)
+int	main(int argc, char **argv)
 {
+	(void)argc;
 	char	*dest;
 	int (**src)(void);
 
